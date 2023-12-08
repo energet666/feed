@@ -1,0 +1,79 @@
+html {
+	/* background-color: dimgray; */
+	background: linear-gradient(#e66465, #9198e5);
+	-webkit-user-select: none; /* Safari */        
+	-moz-user-select: none; /* Firefox */
+	-ms-user-select: none; /* IE10+/Edge */
+	user-select: none; /* Standard */
+}
+
+body {
+	width: 33%;
+	max-width: 500px;
+	min-width: 400px;
+	margin: auto;
+	/* border: solid black 3px; */
+	transition: all 1s ease-in-out;
+}
+
+.card {
+	/* border: solid red 1px; */
+	margin: 10px;
+	padding: 2%;
+	text-align: center;
+	background-color: white;
+	border-radius: 10px;
+	transition: all 0.3s ease-in-out;
+	word-break: break-all;
+	font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.card:hover {
+	box-shadow: rgba(0, 0, 0, 0.226) 0px 0px 15px 10px;
+	/* margin-left: -50px;
+	margin-right: -50px; */
+}
+
+img:active {
+	position: fixed;
+	top: 0px;
+	left: 0px;
+	/* right: 0px;
+	bottom: 0px; */
+	height: 100%;
+	width: 100%;
+	object-fit: contain;
+	/* border: solid black 20px; */
+	/* box-sizing: border-box; */
+	z-index: 100;
+	background-color: black;
+	/* opacity: 50%; */
+}
+
+video, audio, img {
+	width: 100%;
+	/* border: solid green 1px; */
+}
+
+input[type=radio] {
+	/* width: 100%; */
+	display: block;
+	margin-right: auto;
+}
+
+a {
+	margin: 5px;
+	display: block;
+}
+
+@media (max-width: 768px) {
+	body {
+		width: 100%;
+		min-width: none;
+		max-width: none;
+		transition: all 1s ease-in-out;
+	}
+	html {
+		background: black;
+	}
+}
