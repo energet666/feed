@@ -88,3 +88,5 @@ func startBrowser(url string) {
 		log.Fatal(err)
 	}
 }
+
+//TODO: Радио из перемешенных песен в upload или другом источнике

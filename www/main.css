@@ -55,6 +55,13 @@ video, audio, img {
 	/* border: solid green 1px; */
 }
 
+/* audio:active {
+	position: fixed;
+	left: 10px;
+	top: 10px;
+	width: 300px;
+} */
+
 input[type=radio] {
 	/* width: 100%; */
 	display: block;
