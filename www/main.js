@@ -1,7 +1,9 @@
 "use strict";
 var ip = window.location.host
+var currentVideo = undefined
 var volumeVideo = 1
 var muteVideo = false
+var currentMusic = undefined
 var volumeMusic = 1
 var muteMusic = false
 
@@ -24,16 +26,16 @@ window.onload = function () {
 		var m = d.getElementsByClassName("music")[0]
 		if(m != undefined){
 			m.onplaying = (e)=>{
+				if(e.target == currentMusic)
+					return
 				e.target.volume = volumeMusic;
 				e.target.muted = muteMusic;
-				var q = document.getElementsByClassName("music")
-				for (let j = 0; j < q.length; j++) {
-					const element2 = q[j];
-					if (element2 != e.target)
-						element2.pause();
-					element2.classList.remove("musicfix");
+				if(currentMusic != undefined) {
+					currentMusic.classList.remove("musicfix");
+					currentMusic.pause();
 				}
 				e.target.classList.add("musicfix");
+				currentMusic = e.target;
 			}
 			m.onvolumechange = (e)=>{
 				volumeMusic = e.target.volume;
@@ -44,14 +46,14 @@ window.onload = function () {
 		var v = d.getElementsByClassName("video")[0]
 		if(v != undefined){
 			v.onplaying = (e)=>{
+				if(e.target == currentVideo)
+					return
 				e.target.volume = volumeVideo;
 				e.target.muted = muteVideo;
-				var q = document.getElementsByClassName("video")
-				for (let j = 0; j < q.length; j++) {
-					const element2 = q[j];
-					if (element2 != e.target)
-						element2.pause();
+				if (currentVideo != undefined) {
+					currentVideo.pause();
 				}
+				currentVideo = e.target;
 			}
 			v.onvolumechange = (e) => {
 				volumeVideo = e.target.volume;
