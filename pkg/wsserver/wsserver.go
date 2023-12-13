@@ -85,13 +85,13 @@ func HtmlBlockFromFileName(name string) []byte {
 	ext := spl[len(spl)-1]
 	switch strings.ToLower(ext) {
 	case "mp4":
-		return ([]byte(`<video controls>
+		return ([]byte(`<video controls class="video">
 								<source  src="./upload/` + name + `" type="video/mp4">
 								Your browser does not support the video tag.
 							</video>`))
 	case "mp3":
 		return ([]byte(`<a href="./upload/` + name + `" download>` + name + `</a>
-							<audio controls>
+							<audio controls class="music">
 								<source loading="lazy" src="./upload/` + name + `" type="audio/mpeg">
 								Your browser does not support the audio element.
 							</audio>`))

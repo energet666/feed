@@ -1,5 +1,9 @@
 "use strict";
 var ip = window.location.host
+var volumeVideo = 1
+var muteVideo = false
+var volumeMusic = 1
+var muteMusic = false
 
 window.onload = function () {
 
@@ -10,19 +14,50 @@ window.onload = function () {
 		var d = document.createElement('div');
 		d.className = 'card';
 		d.innerHTML = event.data;
-		// document.body.append(d);
 		var content = document.getElementById('content');
 		content.prepend(d)
 
-		// var imgLs = document.getElementsByTagName("img")
-		// for(const element of imgLs) {
-		// 	element.addEventListener("dragstart", (e)=>{
-		// 		e.preventDefault();
-		// 	})
-		// }
 		d.addEventListener("dragstart", (e)=>{
 			e.preventDefault();
 		})
+
+		var m = d.getElementsByClassName("music")[0]
+		if(m != undefined){
+			m.onplaying = (e)=>{
+				e.target.volume = volumeMusic;
+				e.target.muted = muteMusic;
+				var q = document.getElementsByClassName("music")
+				for (let j = 0; j < q.length; j++) {
+					const element2 = q[j];
+					if (element2 != e.target)
+						element2.pause();
+					element2.classList.remove("musicfix");
+				}
+				e.target.classList.add("musicfix");
+			}
+			m.onvolumechange = (e)=>{
+				volumeMusic = e.target.volume;
+				muteMusic = e.target.muted;
+			}
+		}
+
+		var v = d.getElementsByClassName("video")[0]
+		if(v != undefined){
+			v.onplaying = (e)=>{
+				e.target.volume = volumeVideo;
+				e.target.muted = muteVideo;
+				var q = document.getElementsByClassName("video")
+				for (let j = 0; j < q.length; j++) {
+					const element2 = q[j];
+					if (element2 != e.target)
+						element2.pause();
+				}
+			}
+			v.onvolumechange = (e) => {
+				volumeVideo = e.target.volume;
+				muteVideo = e.target.muted;
+			}
+		}
 	}
 
 	socketUpload.onmessage = appendToBody;

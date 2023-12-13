@@ -62,6 +62,13 @@ video, audio, img {
 	width: 300px;
 } */
 
+.musicfix {
+	position: fixed;
+	right: 10px;
+	top: 10px;
+	width: 300px;
+}
+
 input[type=radio] {
 	/* width: 100%; */
 	display: block;
