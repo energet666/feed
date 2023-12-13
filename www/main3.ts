@@ -67,7 +67,12 @@ window.onload = function () {
 	}
 
 	socketUpload.onmessage = appendToBody;
-	socket.onmessage = appendToBody;
+	socket.addEventListener("message", appendToBody)
+	socket.addEventListener("message", (e)=>{
+		let src = "/upload/Iphone - Message Tone.mp3"
+		let ring = new Audio(src)
+		ring.play()
+	})
 
 	socket.onclose = function () {
 		console.log('Service', "WebSocket Disconnected");

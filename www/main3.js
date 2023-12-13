@@ -60,7 +60,12 @@ window.onload = function () {
         }
     }
     socketUpload.onmessage = appendToBody;
-    socket.onmessage = appendToBody;
+    socket.addEventListener("message", appendToBody);
+    socket.addEventListener("message", function (e) {
+        var src = "/upload/Iphone - Message Tone.mp3";
+        var ring = new Audio(src);
+        ring.play();
+    });
     socket.onclose = function () {
         console.log('Service', "WebSocket Disconnected");
     };
