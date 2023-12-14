@@ -49,7 +49,7 @@ window.onload = function () {
 		if(v != undefined){
 			v.onplaying = (e)=>{
 				const el = e.target as HTMLVideoElement
-				if(e.target == currentVideo)
+				if(el == currentVideo)
 					return
 				el.volume = volumeVideo;
 				el.muted = muteVideo;
