@@ -7,15 +7,15 @@ html {
 }
 
 body {
-	width: 33%;
-	max-width: 500px;
-	min-width: 400px;
+	width: 40%;
+	max-width: 600px;
+	min-width: 500px;
 	margin: auto;
 	transition: all 1s ease-in-out;
 }
 
 .card {
-	margin: 10px;
+	margin: 5px;
 	padding: 2%;
 	text-align: center;
 	background-color: white;
@@ -23,6 +23,11 @@ body {
 	transition: all 0.3s ease-in-out;
 	word-break: break-all;
 	font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+	display: block;
+	position: relative;
+	float: left;
+	width: 100%;
+	box-sizing: border-box;
 }
 
 .card:hover {
@@ -66,4 +71,31 @@ a {
 	html {
 		background: black;
 	}
+}
+
+.post{
+	width: 60%;
+	position: relative;
+	border: solid #9198e5 2px;
+	box-sizing: border-box;
+	margin: 0px;
+	float: left;
+}
+.comments{
+	width: 40%;
+	position: relative;
+	border: solid #1ecf59 2px;
+	box-sizing: border-box;
+	margin: 0px;
+	float: left;
+	padding: 5px;
+	height: 300px;
+	overflow: auto;
+	text-align: left;
+}
+.msginput{
+	box-sizing: border-box;
+	position: relative;
+	float: right;
+	width: 40%;
 }

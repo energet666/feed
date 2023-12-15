@@ -1,7 +1,7 @@
 "use strict";
 
 window.onload = function () {
-	var ip = window.location.host
+	const ip = window.location.host
 	var currentVideo:HTMLVideoElement|null = null
 	var volumeVideo = 1
 	var muteVideo = false
@@ -9,23 +9,34 @@ window.onload = function () {
 	var volumeMusic = 1
 	var muteMusic = false
 
-	var socket = new WebSocket("ws://" + ip + "/ws");
-	var socketUpload = new WebSocket("ws://" + ip + "/upload");
+	const tmp = document.getElementById("templatecard") as HTMLTemplateElement
+	const content = document.getElementById('content') as HTMLDivElement
+
+	const socket = new WebSocket("ws://" + ip + "/ws");
+	const socketUpload = new WebSocket("ws://" + ip + "/upload");
 
 	function appendToBody(event: MessageEvent) {
-		var d = document.createElement('div');
-		d.className = 'card';
-		d.innerHTML = event.data;
-		var content = document.getElementById('content')!
-		content.prepend(d)
+		const d = tmp.content.cloneNode(true) as HTMLDivElement
+		const post = d.querySelector(".post") as HTMLDivElement
+		const comments = d.querySelector(".comments") as HTMLDivElement
+		const msginput = d.querySelector(".msginput") as HTMLInputElement
 
-		d.addEventListener("dragstart", (e)=>{
-			e.preventDefault();
-		})
+		post.innerHTML = event.data
+		comments.innerHTML = ""
+		msginput.onkeydown = function (event) {
+			if(event.key == 'Enter') {
+				// socket.send(inp.value);
+				if (msginput.value.length == 0) {
+					return
+				}
+				comments.innerHTML += msginput.value+"<br>"
+				msginput.value = "";
+			}
+		}
 
-		var m = d.getElementsByClassName("music")[0] as HTMLAudioElement
-		if(m != undefined){
-			m.onplaying = (e: Event)=>{
+		var m = d.querySelector(".music") as HTMLAudioElement
+		if(m){
+			m.onplaying = (e)=>{
 				const el = e.target as HTMLAudioElement
 				if(el == currentMusic)
 					return
@@ -45,8 +56,8 @@ window.onload = function () {
 			}
 		}
 
-		var v = d.getElementsByClassName("video")[0] as HTMLVideoElement
-		if(v != undefined){
+		var v = d.querySelector(".video") as HTMLVideoElement
+		if(v){
 			v.onplaying = (e)=>{
 				const el = e.target as HTMLVideoElement
 				if(el == currentVideo)
@@ -64,6 +75,7 @@ window.onload = function () {
 				muteVideo = el.muted;
 			}
 		}
+		content.prepend(d)//делается в конце функции т.к. после выполнения данной команды содержимое d недоступно
 	}
 
 	socketUpload.onmessage = appendToBody;
@@ -100,16 +112,19 @@ window.onload = function () {
 	document.addEventListener("dragover", (e) => {
 		e.preventDefault();
 	})
+	document.addEventListener("dragstart", (e) => {
+		e.preventDefault();
+	})
 	document.addEventListener("drop", (e) => {
 		e.preventDefault();
 		var fs = e.dataTransfer!.files;
 		for (let index = 0; index < fs.length; index++) {
-			const element = fs[index];
-			console.log('You selected ' + element.name);
-			socketUpload.send(element.name);
-			socketUpload.send(element.size.toString());
-			console.log('File size: ' + element.size);
-			socketUpload.send(element);
+			const el = fs[index];
+			console.log('You selected ' + el.name);
+			socketUpload.send(el.name);
+			socketUpload.send(el.size.toString());
+			console.log('File size: ' + el.size);
+			socketUpload.send(el);
 		}
 	})
 }

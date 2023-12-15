@@ -7,19 +7,29 @@ window.onload = function () {
     var currentMusic = null;
     var volumeMusic = 1;
     var muteMusic = false;
+    var tmp = document.getElementById("templatecard");
+    var content = document.getElementById('content');
     var socket = new WebSocket("ws://" + ip + "/ws");
     var socketUpload = new WebSocket("ws://" + ip + "/upload");
     function appendToBody(event) {
-        var d = document.createElement('div');
-        d.className = 'card';
-        d.innerHTML = event.data;
-        var content = document.getElementById('content');
-        content.prepend(d);
-        d.addEventListener("dragstart", function (e) {
-            e.preventDefault();
-        });
-        var m = d.getElementsByClassName("music")[0];
-        if (m != undefined) {
+        var d = tmp.content.cloneNode(true);
+        var post = d.querySelector(".post");
+        var comments = d.querySelector(".comments");
+        var msginput = d.querySelector(".msginput");
+        post.innerHTML = event.data;
+        comments.innerHTML = "";
+        msginput.onkeydown = function (event) {
+            if (event.key == 'Enter') {
+                // socket.send(inp.value);
+                if (msginput.value.length == 0) {
+                    return;
+                }
+                comments.innerHTML += msginput.value + "<br>";
+                msginput.value = "";
+            }
+        };
+        var m = d.querySelector(".music");
+        if (m) {
             m.onplaying = function (e) {
                 var el = e.target;
                 if (el == currentMusic)
@@ -39,11 +49,11 @@ window.onload = function () {
                 muteMusic = el.muted;
             };
         }
-        var v = d.getElementsByClassName("video")[0];
-        if (v != undefined) {
+        var v = d.querySelector(".video");
+        if (v) {
             v.onplaying = function (e) {
                 var el = e.target;
-                if (e.target == currentVideo)
+                if (el == currentVideo)
                     return;
                 el.volume = volumeVideo;
                 el.muted = muteVideo;
@@ -58,6 +68,7 @@ window.onload = function () {
                 muteVideo = el.muted;
             };
         }
+        content.prepend(d); //делается в конце функции т.к. после выполнения данной команды содержимое d недоступно
     }
     socketUpload.onmessage = appendToBody;
     socket.addEventListener("message", appendToBody);
@@ -90,16 +101,19 @@ window.onload = function () {
     document.addEventListener("dragover", function (e) {
         e.preventDefault();
     });
+    document.addEventListener("dragstart", function (e) {
+        e.preventDefault();
+    });
     document.addEventListener("drop", function (e) {
         e.preventDefault();
         var fs = e.dataTransfer.files;
         for (var index = 0; index < fs.length; index++) {
-            var element = fs[index];
-            console.log('You selected ' + element.name);
-            socketUpload.send(element.name);
-            socketUpload.send(element.size.toString());
-            console.log('File size: ' + element.size);
-            socketUpload.send(element);
+            var el = fs[index];
+            console.log('You selected ' + el.name);
+            socketUpload.send(el.name);
+            socketUpload.send(el.size.toString());
+            console.log('File size: ' + el.size);
+            socketUpload.send(el);
         }
     });
 };
