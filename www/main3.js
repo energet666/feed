@@ -24,7 +24,7 @@ window.onload = function () {
                 if (msginput.value.length == 0) {
                     return;
                 }
-                comments.innerHTML += msginput.value + "<br>";
+                comments.innerHTML = msginput.value + "<br>" + comments.innerHTML;
                 msginput.value = "";
             }
         };

@@ -3,7 +3,6 @@ package main
 import (
 	"feed/pkg/wsserver"
 	"fmt"
-	"io/fs"
 	"log"
 	"net/http"
 	"os"
@@ -14,22 +13,13 @@ import (
 	"golang.org/x/net/websocket"
 )
 
-// var filesMap = make(map[string]time.Time)
-
-// file slice sorting
-type ByDate []fs.DirEntry
-
-func (a ByDate) Len() int      { return len(a) }
-func (a ByDate) Swap(i, j int) { a[i], a[j] = a[j], a[i] }
-func (a ByDate) Less(i, j int) bool {
-	finfoi, _ := a[i].Info()
-	finfoj, _ := a[j].Info()
-	return finfoi.ModTime().Before(finfoj.ModTime())
-}
-
 func inUpload(ws *websocket.Conn) {
 	files, _ := os.ReadDir("./www/upload")
-	sort.Sort(ByDate(files))
+	sort.Slice(files, func(i, j int) bool {
+		finfoi, _ := files[i].Info()
+		finfoj, _ := files[j].Info()
+		return finfoi.ModTime().Before(finfoj.ModTime())
+	})
 	for _, f := range files {
 		ws.Write(wsserver.HtmlBlockFromFileName(f.Name()))
 	}
