@@ -1,0 +1,5 @@
+{
+    "code-runner.executorMap": {
+        "go": "go build $fileName && main.exe"
+    }
+}
