@@ -9,6 +9,7 @@ import (
 	"os/exec"
 	"runtime"
 	"sort"
+	"strconv"
 
 	"golang.org/x/net/websocket"
 )
@@ -26,36 +27,41 @@ func inUpload(ws *websocket.Conn) {
 }
 
 func main() {
+	port := "12345"
+	if len(os.Args) > 1 {
+		if len(os.Args[1]) > 5 {
+			fmt.Println("Port must be a number in range 0..99999!")
+			return
+		}
+		_, err := strconv.Atoi(os.Args[1])
+		if err != nil {
+			fmt.Println("Port must be a number in range 0..99999!")
+			return
+		}
+		port = os.Args[1]
+	}
+
 	s := wsserver.NewWsServer(inUpload)
 
-	// http.Handle("/", myHandler{http.Dir("www")})
 	http.Handle("/", http.HandlerFunc(myFIleServerHandler))
 	http.Handle("/upload", websocket.Handler(s.HandleWsUpload))
 	http.Handle("/ws", websocket.Handler(s.HandleWs))
 
-	go http.ListenAndServe(":12345", nil)
+	go http.ListenAndServe(":"+port, nil)
 
-	log.Println("FileServer listen localhost:12345 ...")
-	log.Println("WebSocketServer listen localhost:12345/ws...")
-	log.Println("WebSocketServer listen localhost:12345/upload...")
+	log.Println("FileServer listen localhost:" + port + " ...")
+	log.Println("WebSocketServer listen localhost:" + port + "/ws...")
+	log.Println("WebSocketServer listen localhost:" + port + "/upload...")
 
-	startBrowser("http://localhost:12345")
+	startBrowser("http://localhost:" + port)
 
 	var read []byte
 	for {
 		fmt.Scan(&read)
+		fmt.Println("read: ", string(read))
 		s.Broadcast(read, "ws")
 	}
 }
-
-// type myHandler struct {
-// 	root http.FileSystem
-// }
-
-// func (f myHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-// 	fmt.Println(r.RemoteAddr, r.Method, r.RequestURI)
-// 	http.FileServer(f.root).ServeHTTP(w, r)
-// }
 
 func myFIleServerHandler(w http.ResponseWriter, r *http.Request) {
 	fmt.Println(r.RemoteAddr, r.Method, r.RequestURI)
