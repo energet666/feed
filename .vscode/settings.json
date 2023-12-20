@@ -1,5 +1,5 @@
 {
     "code-runner.executorMap": {
-        "go": "go build $fileName && main.exe"
+        "go": "go build . && feed.exe 12346"
     }
 }
