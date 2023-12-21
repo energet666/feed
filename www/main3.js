@@ -16,7 +16,77 @@ window.onload = function () {
         var post = d.querySelector(".post");
         var comments = d.querySelector(".comments");
         var msginput = d.querySelector(".msginput");
-        post.innerHTML = event.data;
+        var path = event.data;
+        var spl = path.split(".");
+        var ext = "";
+        if (spl.length > 1) {
+            ext = spl.pop();
+        }
+        switch (ext) {
+            case "mp4":
+                var vt = document.getElementById("templatevideo").content.cloneNode(true);
+                var v = vt.querySelector("video");
+                v.setAttribute("src", path);
+                v.onplaying = function (e) {
+                    var el = e.target;
+                    if (el == currentVideo)
+                        return;
+                    el.volume = volumeVideo;
+                    el.muted = muteVideo;
+                    if (currentVideo) {
+                        currentVideo.pause();
+                    }
+                    currentVideo = el;
+                };
+                v.onvolumechange = function (e) {
+                    var el = e.target;
+                    volumeVideo = el.volume;
+                    muteVideo = el.muted;
+                };
+                post.append(vt);
+                break;
+            case "mp3":
+                var at = document.getElementById("templateaudio").content.cloneNode(true);
+                var ha = at.querySelector("a");
+                ha.setAttribute("href", path);
+                ha.innerText = path;
+                at.querySelector("source").setAttribute("src", path);
+                var a = at.querySelector("audio");
+                a.onplaying = function (e) {
+                    var el = e.target;
+                    if (el == currentMusic)
+                        return;
+                    el.volume = volumeMusic;
+                    el.muted = muteMusic;
+                    if (currentMusic) {
+                        currentMusic.classList.remove("musicfix");
+                        currentMusic.pause();
+                    }
+                    el.classList.add("musicfix");
+                    currentMusic = el;
+                };
+                a.onvolumechange = function (e) {
+                    var el = e.target;
+                    volumeMusic = el.volume;
+                    muteMusic = el.muted;
+                };
+                post.append(at);
+                break;
+            case "jpg":
+            case "png":
+            case "jpeg":
+                var i = document.getElementById("templateimg").content.cloneNode(true);
+                i.querySelector("img").setAttribute("src", path);
+                post.append(i);
+                break;
+            default:
+                var o = document.getElementById("templateother").content.cloneNode(true);
+                var ho = o.querySelector("a");
+                ho.setAttribute("href", path);
+                ho.innerText = path;
+                post.append(o);
+                break;
+        }
         comments.innerHTML = "";
         msginput.onkeydown = function (event) {
             if (event.key == 'Enter') {
@@ -28,46 +98,6 @@ window.onload = function () {
                 msginput.value = "";
             }
         };
-        var m = d.querySelector(".music");
-        if (m) {
-            m.onplaying = function (e) {
-                var el = e.target;
-                if (el == currentMusic)
-                    return;
-                el.volume = volumeMusic;
-                el.muted = muteMusic;
-                if (currentMusic) {
-                    currentMusic.classList.remove("musicfix");
-                    currentMusic.pause();
-                }
-                el.classList.add("musicfix");
-                currentMusic = el;
-            };
-            m.onvolumechange = function (e) {
-                var el = e.target;
-                volumeMusic = el.volume;
-                muteMusic = el.muted;
-            };
-        }
-        var v = d.querySelector(".video");
-        if (v) {
-            v.onplaying = function (e) {
-                var el = e.target;
-                if (el == currentVideo)
-                    return;
-                el.volume = volumeVideo;
-                el.muted = muteVideo;
-                if (currentVideo) {
-                    currentVideo.pause();
-                }
-                currentVideo = el;
-            };
-            v.onvolumechange = function (e) {
-                var el = e.target;
-                volumeVideo = el.volume;
-                muteVideo = el.muted;
-            };
-        }
         content.prepend(d); //делается в конце функции т.к. после выполнения данной команды содержимое d недоступно
     }
     socketUpload.onmessage = appendToBody;

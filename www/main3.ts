@@ -16,12 +16,84 @@ window.onload = function () {
 	const socketUpload = new WebSocket("ws://" + ip + "/upload");
 
 	function appendToBody(event: MessageEvent) {
-		const d = tmp.content.cloneNode(true) as HTMLDivElement
+		const d = tmp.content.cloneNode(true) as DocumentFragment
 		const post = d.querySelector(".post") as HTMLDivElement
 		const comments = d.querySelector(".comments") as HTMLDivElement
 		const msginput = d.querySelector(".msginput") as HTMLInputElement
 
-		post.innerHTML = event.data
+		const path = event.data as string
+		var spl = path.split(".")
+		var ext = ""
+		if (spl.length > 1){
+			ext = spl.pop()!
+		}
+		switch (ext) {
+			case "mp4":
+				const vt = (document.getElementById("templatevideo") as HTMLTemplateElement).content.cloneNode(true) as DocumentFragment
+				const v = vt.querySelector("video")!
+				v.setAttribute("src", path)
+
+				v.onplaying = (e)=>{
+					const el = e.target as HTMLVideoElement
+					if(el == currentVideo)
+						return
+					el.volume = volumeVideo;
+					el.muted = muteVideo;
+					if (currentVideo) {
+						currentVideo.pause();
+					}
+					currentVideo = el;
+				}
+				v.onvolumechange = (e) => {
+					const el = e.target as HTMLVideoElement
+					volumeVideo = el.volume;
+					muteVideo = el.muted;
+				}
+				post.append(vt)
+				break;
+			case "mp3":
+				const at = (document.getElementById("templateaudio") as HTMLTemplateElement).content.cloneNode(true) as DocumentFragment
+				const ha = at.querySelector("a")!
+				ha.setAttribute("href", path)
+				ha.innerText = path
+				at.querySelector("source")!.setAttribute("src", path)
+				
+				const a = at.querySelector("audio")!
+				a.onplaying = (e)=>{
+					const el = e.target as HTMLAudioElement
+					if(el == currentMusic)
+						return
+					el.volume = volumeMusic;
+					el.muted = muteMusic;
+					if(currentMusic) {
+						currentMusic.classList.remove("musicfix");
+						currentMusic.pause();
+					}
+					el.classList.add("musicfix");
+					currentMusic = el;
+				}
+				a.onvolumechange = (e)=>{
+					const el = e.target as HTMLAudioElement
+					volumeMusic = el.volume;
+					muteMusic = el.muted;
+				}
+				post.append(at)
+				break;
+			case "jpg":
+			case "png":
+			case "jpeg":
+				const i = (document.getElementById("templateimg") as HTMLTemplateElement).content.cloneNode(true) as DocumentFragment
+				i.querySelector("img")!.setAttribute("src", path)
+				post.append(i)
+				break;
+			default:
+				const o = (document.getElementById("templateother") as HTMLTemplateElement).content.cloneNode(true) as DocumentFragment
+				const ho = o.querySelector("a")!
+				ho.setAttribute("href", path) 
+				ho.innerText = path
+				post.append(o)
+				break;
+		}
 		comments.innerHTML = ""
 		msginput.onkeydown = function (event) {
 			if(event.key == 'Enter') {
@@ -31,48 +103,6 @@ window.onload = function () {
 				}
 				comments.innerHTML = msginput.value+"<br>"+comments.innerHTML;
 				msginput.value = "";
-			}
-		}
-
-		var m = d.querySelector(".music") as HTMLAudioElement
-		if(m){
-			m.onplaying = (e)=>{
-				const el = e.target as HTMLAudioElement
-				if(el == currentMusic)
-					return
-				el.volume = volumeMusic;
-				el.muted = muteMusic;
-				if(currentMusic) {
-					currentMusic.classList.remove("musicfix");
-					currentMusic.pause();
-				}
-				el.classList.add("musicfix");
-				currentMusic = el;
-			}
-			m.onvolumechange = (e)=>{
-				const el = e.target as HTMLAudioElement
-				volumeMusic = el.volume;
-				muteMusic = el.muted;
-			}
-		}
-
-		var v = d.querySelector(".video") as HTMLVideoElement
-		if(v){
-			v.onplaying = (e)=>{
-				const el = e.target as HTMLVideoElement
-				if(el == currentVideo)
-					return
-				el.volume = volumeVideo;
-				el.muted = muteVideo;
-				if (currentVideo) {
-					currentVideo.pause();
-				}
-				currentVideo = el;
-			}
-			v.onvolumechange = (e) => {
-				const el = e.target as HTMLVideoElement
-				volumeVideo = el.volume;
-				muteVideo = el.muted;
 			}
 		}
 		content.prepend(d)//делается в конце функции т.к. после выполнения данной команды содержимое d недоступно

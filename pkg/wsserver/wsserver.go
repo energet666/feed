@@ -5,7 +5,6 @@ import (
 	"io"
 	"os"
 	"strconv"
-	"strings"
 
 	"golang.org/x/net/websocket"
 )
@@ -74,35 +73,9 @@ func (s *wsServer) HandleWsUpload(ws *websocket.Conn) {
 				fmt.Println("Uploading complite!")
 				state = 0
 
-				s.Broadcast(HtmlBlockFromFileName(name), "upload")
+				s.Broadcast([]byte(`./upload/`+name), "upload")
 			}
 		}
-	}
-}
-
-func HtmlBlockFromFileName(name string) []byte {
-	spl := strings.Split(name, ".")
-	ext := ""
-	if len(spl) > 1 {
-		ext = spl[len(spl)-1]
-	}
-	switch strings.ToLower(ext) {
-	// case "mp4":
-	// 	return ([]byte(`<video controls class="video">
-	// 		<source src="./upload/` + name + `" type="video/mp4" />
-	// 	</video>`))
-	case "mp4":
-		return ([]byte(`<video src="./upload/` + name + `" controls playsinline class="video"></video>`))
-	case "mp3":
-		return ([]byte(`<a href="./upload/` + name + `" download>` + name + `</a>
-						<audio controls class="music">
-							<source loading="lazy" src="./upload/` + name + `" type="audio/mpeg">
-							Your browser does not support the audio element.
-						</audio>`))
-	case "jpg", "png", "jpeg":
-		return ([]byte(`<img loading="lazy" src="./upload/` + name + `">`))
-	default:
-		return ([]byte(`<a href="./upload/` + name + `">` + name + `</a>`))
 	}
 }
 

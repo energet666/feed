@@ -80,9 +80,9 @@ a {
 	border: solid #9198e5 2px;
 	box-sizing: border-box;
 	margin: 0px;
-	border-radius: 5px 5px 0 0;
-	overflow: hidden;
-	/* z-index: 1; */
+	/* border-radius: 5px 5px 0 0;
+	overflow: hidden; */
+	/* z-index: 2; */
 	/* float: left; */
 }
 .comments{
@@ -102,7 +102,6 @@ a {
 	background-color: aqua;
 }
 .wrapper {
-	z-index: 1;
 	width: 100%;
 	position: relative;
 	margin-left: auto;
@@ -117,6 +116,7 @@ a {
 	margin-top: -7rem;
 	/* width: 103%; */
 	border-radius: 10px;
+	z-index: 1;
 }
 .wrapper:hover .comments{
 	height: 10rem;

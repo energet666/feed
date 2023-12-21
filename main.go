@@ -22,7 +22,7 @@ func inUpload(ws *websocket.Conn) {
 		return finfoi.ModTime().Before(finfoj.ModTime())
 	})
 	for _, f := range files {
-		ws.Write(wsserver.HtmlBlockFromFileName(f.Name()))
+		ws.Write([]byte(`./upload/` + f.Name()))
 	}
 }
 
