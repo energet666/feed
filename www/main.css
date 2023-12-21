@@ -6,6 +6,7 @@ html {
 	user-select: none; /* Standard */
 	font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 	font-size: 15px;
+	scroll-snap-type: y mandatory;
 }
 
 body {
@@ -26,6 +27,7 @@ body {
 	word-break: break-all;
 	width: 100%;
 	box-sizing: border-box;
+	scroll-snap-align: start;
 }
 
 .card:hover {

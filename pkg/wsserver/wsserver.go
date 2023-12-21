@@ -25,7 +25,7 @@ func NewWsServer(f func(ws *websocket.Conn)) *wsServer {
 func (s *wsServer) HandleWsUpload(ws *websocket.Conn) {
 	s.conns[ws] = "upload"
 	buf := make([]byte, 1024)
-	fmt.Println("new incoming \"upload\" connection from client:", ws.Request().RemoteAddr)
+	fmt.Println(`new incoming "upload" connection from client:`, ws.Request().RemoteAddr)
 	fmt.Println("WS list: ", s.conns)
 	var state int = 0
 	var fo *os.File
@@ -82,7 +82,10 @@ func (s *wsServer) HandleWsUpload(ws *websocket.Conn) {
 
 func HtmlBlockFromFileName(name string) []byte {
 	spl := strings.Split(name, ".")
-	ext := spl[len(spl)-1]
+	ext := ""
+	if len(spl) > 1 {
+		ext = spl[len(spl)-1]
+	}
 	switch strings.ToLower(ext) {
 	// case "mp4":
 	// 	return ([]byte(`<video controls class="video">
@@ -106,7 +109,7 @@ func HtmlBlockFromFileName(name string) []byte {
 func (s *wsServer) HandleWs(ws *websocket.Conn) {
 	s.conns[ws] = "ws"
 	buf := make([]byte, 1024)
-	fmt.Println("New incoming \"ws\" connection from client:", ws.Request().RemoteAddr)
+	fmt.Println(`New incoming "ws" connection from client:`, ws.Request().RemoteAddr)
 	fmt.Println("WS list: ", s.conns)
 	for {
 		n, err := ws.Read(buf)
