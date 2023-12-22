@@ -21,8 +21,10 @@ window.onload = function () {
         wrapper.id = path;
         var spl = path.split(".");
         var ext = "";
-        if (spl.length > 1) {
-            ext = spl.pop();
+        // If spl.length is one, it's a visible file with no extension ie. file
+        // If spl[0] === "" and spl.length === 2 it's a hidden file with no extension ie. .htaccess
+        if (!(spl.length === 1 || (spl[0] === "" && spl.length === 2))) {
+            ext = spl.pop().toLowerCase();
         }
         switch (ext) {
             case "mp4":
