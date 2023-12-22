@@ -1,6 +1,7 @@
 package wsserver
 
 import (
+	"encoding/json"
 	"fmt"
 	"io"
 	"os"
@@ -79,6 +80,11 @@ func (s *wsServer) HandleWsUpload(ws *websocket.Conn) {
 	}
 }
 
+type Message struct {
+	Id  string
+	Txt string
+}
+
 func (s *wsServer) HandleWs(ws *websocket.Conn) {
 	s.conns[ws] = "ws"
 	buf := make([]byte, 1024)
@@ -97,6 +103,12 @@ func (s *wsServer) HandleWs(ws *websocket.Conn) {
 			continue
 		}
 		msg := buf[:n]
+
+		var msgs Message
+		json.Unmarshal(msg, &msgs)
+		fo, _ := os.OpenFile("./www/"+msgs.Id+"._msg", os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0644)
+		fo.Write([]byte(msgs.Txt + "\n"))
+		fo.Close()
 		s.Broadcast(msg, "ws")
 	}
 }

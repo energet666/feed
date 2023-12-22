@@ -20,8 +20,10 @@ window.onload = function () {
 		const post = d.querySelector(".post") as HTMLDivElement
 		const comments = d.querySelector(".comments") as HTMLDivElement
 		const msginput = d.querySelector(".msginput") as HTMLInputElement
+		const wrapper = d.querySelector(".wrapper") as HTMLDivElement
 
 		const path = event.data as string
+		wrapper.id = path
 		var spl = path.split(".")
 		var ext = ""
 		if (spl.length > 1){
@@ -97,19 +99,30 @@ window.onload = function () {
 		comments.innerHTML = ""
 		msginput.onkeydown = function (event) {
 			if(event.key == 'Enter') {
-				// socket.send(inp.value);
-				if (msginput.value.length == 0) {
+				const el = event.target as HTMLInputElement
+				const p = el.parentElement as HTMLDivElement
+				const com = p.querySelector(".comments") as HTMLDivElement
+				if (el.value.length == 0) {
 					return
 				}
-				comments.innerHTML = msginput.value+"<br>"+comments.innerHTML;
-				msginput.value = "";
+				socket.send(JSON.stringify({
+					id: p.id,
+					txt: el.value
+				}))
+				el.value = "";
 			}
 		}
 		content.prepend(d)//делается в конце функции т.к. после выполнения данной команды содержимое d недоступно
 	}
 
 	socketUpload.onmessage = appendToBody;
-	socket.addEventListener("message", appendToBody)
+	socket.addEventListener("message", (e)=>{
+		const d = JSON.parse(e.data)
+		const com = document.getElementById(d.id)!.querySelector(".comments") as HTMLDivElement
+		com.innerText += d.txt + "\n"
+		com.scrollTo(0, com.scrollHeight)
+		console.log(d)
+	})
 	socket.addEventListener("message", (e)=>{
 		let src = "/upload/Iphone - Message Tone.mp3"
 		let ring = new Audio(src)
@@ -125,18 +138,6 @@ window.onload = function () {
 	socket.onopen = function () {
 		console.log('Service', "WebSocket Connected");
 		// socket.send('Ураааааа!')
-	}
-
-	var btn = document.getElementById('btn') as HTMLButtonElement
-	var inp = document.getElementById('inp') as HTMLInputElement
-	btn.onclick = function () {
-		socket.send(inp.value);
-	}
-	inp.onkeydown = function (event) {
-		if(event.key == 'Enter') {
-			socket.send(inp.value);
-			inp.value = "";
-		}
 	}
 
 	document.addEventListener("dragover", (e) => {

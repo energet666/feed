@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"runtime"
 	"sort"
 	"strconv"
@@ -22,7 +23,12 @@ func inUpload(ws *websocket.Conn) {
 		return finfoi.ModTime().Before(finfoj.ModTime())
 	})
 	for _, f := range files {
-		ws.Write([]byte(`./upload/` + f.Name()))
+		ext := filepath.Ext(f.Name())
+		if ext != "._msg" {
+			ws.Write([]byte(`./upload/` + f.Name()))
+		} else {
+			//TODO отправка содержимого в комменты
+		}
 	}
 }
 

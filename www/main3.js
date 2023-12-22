@@ -16,7 +16,9 @@ window.onload = function () {
         var post = d.querySelector(".post");
         var comments = d.querySelector(".comments");
         var msginput = d.querySelector(".msginput");
+        var wrapper = d.querySelector(".wrapper");
         var path = event.data;
+        wrapper.id = path;
         var spl = path.split(".");
         var ext = "";
         if (spl.length > 1) {
@@ -90,18 +92,29 @@ window.onload = function () {
         comments.innerHTML = "";
         msginput.onkeydown = function (event) {
             if (event.key == 'Enter') {
-                // socket.send(inp.value);
-                if (msginput.value.length == 0) {
+                var el = event.target;
+                var p = el.parentElement;
+                var com = p.querySelector(".comments");
+                if (el.value.length == 0) {
                     return;
                 }
-                comments.innerHTML = msginput.value + "<br>" + comments.innerHTML;
-                msginput.value = "";
+                socket.send(JSON.stringify({
+                    id: p.id,
+                    txt: el.value
+                }));
+                el.value = "";
             }
         };
         content.prepend(d); //делается в конце функции т.к. после выполнения данной команды содержимое d недоступно
     }
     socketUpload.onmessage = appendToBody;
-    socket.addEventListener("message", appendToBody);
+    socket.addEventListener("message", function (e) {
+        var d = JSON.parse(e.data);
+        var com = document.getElementById(d.id).querySelector(".comments");
+        com.innerText += d.txt + "\n";
+        com.scrollTo(0, com.scrollHeight);
+        console.log(d);
+    });
     socket.addEventListener("message", function (e) {
         var src = "/upload/Iphone - Message Tone.mp3";
         var ring = new Audio(src);
@@ -116,17 +129,6 @@ window.onload = function () {
     socket.onopen = function () {
         console.log('Service', "WebSocket Connected");
         // socket.send('Ураааааа!')
-    };
-    var btn = document.getElementById('btn');
-    var inp = document.getElementById('inp');
-    btn.onclick = function () {
-        socket.send(inp.value);
-    };
-    inp.onkeydown = function (event) {
-        if (event.key == 'Enter') {
-            socket.send(inp.value);
-            inp.value = "";
-        }
     };
     document.addEventListener("dragover", function (e) {
         e.preventDefault();
