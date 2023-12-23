@@ -100,14 +100,11 @@ window.onload = function () {
 				post.append(o)
 				break;
 		}
+
 		var xhr = new XMLHttpRequest()
 		xhr.open('GET', path + "._msg", false)
 		xhr.setRequestHeader("Cache-Control", "no-cache")
-		try {
-			xhr.send()
-		} catch (error) {
-			console.log(error)
-		}
+		xhr.send()
 		if(xhr.status==200){
 			comments.innerText = xhr.response + "<history restored>\n\n"
 		}
