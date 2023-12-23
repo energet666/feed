@@ -98,8 +98,19 @@ window.onload = function () {
 				post.append(o)
 				break;
 		}
-		comments.innerHTML = ""
-		msginput.onkeydown = function (event) {
+		var xhr = new XMLHttpRequest()
+		xhr.open('GET', path + "._msg", false)
+		xhr.setRequestHeader("Cache-Control", "no-cache")
+		try {
+			xhr.send()
+		} catch (error) {
+			console.log(error)
+		}
+		if(xhr.status==200){
+			comments.innerText = xhr.response
+		}
+
+		msginput.onkeydown = (event) => {
 			if(event.key == 'Enter') {
 				const el = event.target as HTMLInputElement
 				const p = el.parentElement as HTMLDivElement
@@ -115,6 +126,7 @@ window.onload = function () {
 			}
 		}
 		content.prepend(d)//делается в конце функции т.к. после выполнения данной команды содержимое d недоступно
+		comments.scrollTo(0, comments.scrollHeight)
 	}
 
 	socketUpload.onmessage = appendToBody;
@@ -123,7 +135,6 @@ window.onload = function () {
 		const com = document.getElementById(d.id)!.querySelector(".comments") as HTMLDivElement
 		com.innerText += d.txt + "\n"
 		com.scrollTo(0, com.scrollHeight)
-		console.log(d)
 	})
 	socket.addEventListener("message", (e)=>{
 		let src = "/upload/Iphone - Message Tone.mp3"

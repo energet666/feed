@@ -6,7 +6,7 @@ html {
 	user-select: none; /* Standard */
 	font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 	font-size: 15px;
-	scroll-snap-type: y mandatory;
+	scroll-snap-type: y proximity;
 }
 
 body {
@@ -91,7 +91,7 @@ a {
 	border: solid #1ecf59 2px;
 	box-sizing: border-box;
 	/* margin: 0px; */
-	height: 3rem;
+	height: 10rem;
 	padding: 5px;
 	overflow-y: scroll;
 	word-wrap: break-word;
@@ -111,15 +111,6 @@ a {
 	box-sizing: border-box;
 	overflow: hidden;
 	border-radius: 0 0 5px 5px;
-}
-.wrapper:hover {
-	margin-top: -7rem;
-	/* width: 103%; */
-	border-radius: 10px;
-	z-index: 1;
-}
-.wrapper:hover .comments{
-	height: 10rem;
 }
 .msginput{
 	box-sizing: border-box;

@@ -91,7 +91,18 @@ window.onload = function () {
                 post.append(o);
                 break;
         }
-        comments.innerHTML = "";
+        var xhr = new XMLHttpRequest();
+        xhr.open('GET', path + "._msg", false);
+        xhr.setRequestHeader("Cache-Control", "no-cache");
+        try {
+            xhr.send();
+        }
+        catch (error) {
+            console.log(error);
+        }
+        if (xhr.status == 200) {
+            comments.innerText = xhr.response;
+        }
         msginput.onkeydown = function (event) {
             if (event.key == 'Enter') {
                 var el = event.target;
@@ -108,6 +119,7 @@ window.onload = function () {
             }
         };
         content.prepend(d); //делается в конце функции т.к. после выполнения данной команды содержимое d недоступно
+        comments.scrollTo(0, comments.scrollHeight);
     }
     socketUpload.onmessage = appendToBody;
     socket.addEventListener("message", function (e) {
@@ -115,7 +127,6 @@ window.onload = function () {
         var com = document.getElementById(d.id).querySelector(".comments");
         com.innerText += d.txt + "\n";
         com.scrollTo(0, com.scrollHeight);
-        console.log(d);
     });
     socket.addEventListener("message", function (e) {
         var src = "/upload/Iphone - Message Tone.mp3";

@@ -11,6 +11,7 @@ import (
 	"runtime"
 	"sort"
 	"strconv"
+	"strings"
 
 	"golang.org/x/net/websocket"
 )
@@ -24,10 +25,9 @@ func inUpload(ws *websocket.Conn) {
 	})
 	for _, f := range files {
 		ext := filepath.Ext(f.Name())
+		ext = strings.ToLower(ext)
 		if ext != "._msg" {
 			ws.Write([]byte(`./upload/` + f.Name()))
-		} else {
-			//TODO отправка содержимого в комменты
 		}
 	}
 }
