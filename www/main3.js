@@ -7,6 +7,8 @@ window.onload = function () {
     var currentMusic = null;
     var volumeMusic = 1;
     var muteMusic = false;
+    var lastMsg = "";
+    var ring = new Audio("./upload/Iphone - Message Tone.mp3");
     var tmp = document.getElementById("templatecard");
     var content = document.getElementById('content');
     var socket = new WebSocket("ws://" + ip + "/ws");
@@ -53,7 +55,7 @@ window.onload = function () {
                 var at = document.getElementById("templateaudio").content.cloneNode(true);
                 var ha = at.querySelector("a");
                 ha.setAttribute("href", path);
-                ha.innerText = path;
+                ha.innerText = path.split("/").pop();
                 at.querySelector("source").setAttribute("src", path);
                 var a = at.querySelector("audio");
                 a.onplaying = function (e) {
@@ -87,7 +89,7 @@ window.onload = function () {
                 var o = document.getElementById("templateother").content.cloneNode(true);
                 var ho = o.querySelector("a");
                 ho.setAttribute("href", path);
-                ho.innerText = path;
+                ho.innerText = path.split("/").pop();
                 post.append(o);
                 break;
         }
@@ -101,7 +103,7 @@ window.onload = function () {
             console.log(error);
         }
         if (xhr.status == 200) {
-            comments.innerText = xhr.response;
+            comments.innerText = xhr.response + "<history restored>\n\n";
         }
         msginput.onkeydown = function (event) {
             if (event.key == 'Enter') {
@@ -111,6 +113,7 @@ window.onload = function () {
                 if (el.value.length == 0) {
                     return;
                 }
+                lastMsg = el.value;
                 socket.send(JSON.stringify({
                     id: p.id,
                     txt: el.value
@@ -127,11 +130,7 @@ window.onload = function () {
         var com = document.getElementById(d.id).querySelector(".comments");
         com.innerText += d.txt + "\n";
         com.scrollTo(0, com.scrollHeight);
-    });
-    socket.addEventListener("message", function (e) {
-        var src = "/upload/Iphone - Message Tone.mp3";
-        var ring = new Audio(src);
-        ring.play();
+        //ring.play()
     });
     socket.onclose = function () {
         console.log('Service', "WebSocket Disconnected");

@@ -8,6 +8,8 @@ window.onload = function () {
 	var currentMusic:HTMLAudioElement|null = null
 	var volumeMusic = 1
 	var muteMusic = false
+	var lastMsg = ""
+	var ring = new Audio("./upload/Iphone - Message Tone.mp3")
 
 	const tmp = document.getElementById("templatecard") as HTMLTemplateElement
 	const content = document.getElementById('content') as HTMLDivElement
@@ -59,7 +61,7 @@ window.onload = function () {
 				const at = (document.getElementById("templateaudio") as HTMLTemplateElement).content.cloneNode(true) as DocumentFragment
 				const ha = at.querySelector("a")!
 				ha.setAttribute("href", path)
-				ha.innerText = path
+				ha.innerText = path.split("/").pop()!
 				at.querySelector("source")!.setAttribute("src", path)
 				
 				const a = at.querySelector("audio")!
@@ -94,7 +96,7 @@ window.onload = function () {
 				const o = (document.getElementById("templateother") as HTMLTemplateElement).content.cloneNode(true) as DocumentFragment
 				const ho = o.querySelector("a")!
 				ho.setAttribute("href", path) 
-				ho.innerText = path
+				ho.innerText = path.split("/").pop()!
 				post.append(o)
 				break;
 		}
@@ -107,7 +109,7 @@ window.onload = function () {
 			console.log(error)
 		}
 		if(xhr.status==200){
-			comments.innerText = xhr.response
+			comments.innerText = xhr.response + "<history restored>\n\n"
 		}
 
 		msginput.onkeydown = (event) => {
@@ -118,6 +120,7 @@ window.onload = function () {
 				if (el.value.length == 0) {
 					return
 				}
+				lastMsg = el.value
 				socket.send(JSON.stringify({
 					id: p.id,
 					txt: el.value
@@ -135,11 +138,7 @@ window.onload = function () {
 		const com = document.getElementById(d.id)!.querySelector(".comments") as HTMLDivElement
 		com.innerText += d.txt + "\n"
 		com.scrollTo(0, com.scrollHeight)
-	})
-	socket.addEventListener("message", (e)=>{
-		let src = "/upload/Iphone - Message Tone.mp3"
-		let ring = new Audio(src)
-		ring.play()
+		//ring.play()
 	})
 
 	socket.onclose = function () {

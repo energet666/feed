@@ -18,10 +18,10 @@ body {
 }
 
 .card {
-	margin: 5px;
+	margin-top: 8px;
 	padding: 5px;
 	text-align: center;
-	background-color: rgba(255, 255, 255, 0.66);
+	background-color: rgb(255, 255, 255);
 	border-radius: 10px;
 	transition: all 0.3s ease-in-out;
 	word-break: break-all;
@@ -43,11 +43,14 @@ img:active {
 	object-fit: contain;
 	z-index: 100;
 	background-color: black;
+	max-height: none;
 }
 
 video, audio, img {
 	width: 100%;
-	/* object-fit: contain; */
+	border-radius: 5px;
+	object-fit: contain;
+	max-height: calc(100vh - 12rem - 15px);
 }
 
 .musicfix {
@@ -64,7 +67,7 @@ a {
 
 @media (max-width: 768px) {
 	body {
-		width: 100%;
+		width: 98%;
 		min-width: none;
 		max-width: none;
 		transition: all 1s ease-in-out;
@@ -77,7 +80,7 @@ a {
 .post{
 	width: 100%;
 	position: relative;
-	border: solid #9198e5 2px;
+	/* border: solid #9198e5 2px; */
 	box-sizing: border-box;
 	margin: 0px;
 	/* border-radius: 5px 5px 0 0;
@@ -88,18 +91,20 @@ a {
 .comments{
 	width: 100%;
 	position: relative;
-	border: solid #1ecf59 2px;
+	/* border: solid #1ecf59 2px; */
 	box-sizing: border-box;
 	/* margin: 0px; */
-	height: 10rem;
+	max-height: 10rem;
 	padding: 5px;
 	overflow-y: scroll;
 	word-wrap: break-word;
 	text-align: left;
 	word-break: normal;
-	text-align: left;
 	transition: all 0.3s ease-in-out;
-	background-color: aqua;
+	-webkit-user-select: text; /* Safari */        
+	-moz-user-select: text; /* Firefox */
+	-ms-user-select: text; /* IE10+/Edge */
+	user-select: text; /* Standard */
 }
 .wrapper {
 	width: 100%;
@@ -107,10 +112,11 @@ a {
 	margin-left: auto;
 	margin-right: auto;
 	transition: all 0.3s ease-in-out;
-	border: solid #cf1ea3 2px;
+	/* border: solid #cf1ea3 2px; */
 	box-sizing: border-box;
+	border-radius: 5px;
 	overflow: hidden;
-	border-radius: 0 0 5px 5px;
+	box-shadow: inset black 0px 0px 10px 0px;
 }
 .msginput{
 	box-sizing: border-box;
@@ -118,4 +124,9 @@ a {
 	width: 100%;
 	height: 2rem;
 	font-size: 1rem;
+	border: 0;
+	outline: none;
+	border-top: dashed 1px #e66465;
+	padding-left: 5px;
+	background-color: transparent;
 }
