@@ -1,3 +1,5 @@
 vendor/
 www/upload/
 .DS_Store
+feed
+feed.exe
