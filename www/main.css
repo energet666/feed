@@ -139,6 +139,7 @@ a {
 	border-radius: 10px;
     border: solid 1px #797979;
 	box-shadow: #000000 0 0 5px 0px;
+	cursor: pointer;
 }
 .butspeed:active {
 	box-shadow: none;
