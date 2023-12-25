@@ -124,11 +124,13 @@ window.onload = function () {
 		}
 
 		var xhr = new XMLHttpRequest()
-		xhr.open('GET', path + "._msg", false)
+		xhr.open('GET', path + "._msg", true)
 		xhr.setRequestHeader("Cache-Control", "no-cache")
 		xhr.send()
-		if(xhr.status==200){
-			comments.innerText = xhr.response + "<history restored>\n\n"
+		xhr.onload = () => {
+			if(xhr.status==200){
+				comments.innerText = xhr.response + "<history restored>\n\n"
+			}
 		}
 
 		msginput.onkeydown = (event) => {
