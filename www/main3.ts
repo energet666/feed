@@ -151,6 +151,7 @@ window.onload = function () {
 		}
 		content.prepend(d)//делается в конце функции т.к. после выполнения данной команды содержимое d недоступно
 		comments.scrollTo(0, comments.scrollHeight)
+		document.querySelector("html")!.scrollTo(0,0)
 	}
 
 	socketUpload.onmessage = appendToBody;
