@@ -50,7 +50,7 @@ video, audio, img {
 	width: 100%;
 	border-radius: 5px;
 	object-fit: contain;
-	max-height: calc(100vh - 12rem - 15px - 2.4rem);
+	max-height: calc(100vh - 12rem - 15px);
 }
 
 .musicfix {
@@ -134,4 +134,14 @@ a {
 .butspeed{
 	height: 2rem;
 	margin: 0.2rem;
+}
+.butwrapper{
+	position: absolute;
+	left: 0;
+	top: 0;
+	display: none;
+}
+.video:hover + .butwrapper{
+	display: block;
+	transition: all 1s;
 }
