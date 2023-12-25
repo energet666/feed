@@ -50,7 +50,7 @@ video, audio, img {
 	width: 100%;
 	border-radius: 5px;
 	object-fit: contain;
-	max-height: calc(100vh - 12rem - 15px);
+	max-height: calc(100vh - 12rem - 15px - 2.4rem);
 }
 
 .musicfix {
@@ -129,4 +129,9 @@ a {
 	border-top: dashed 1px #e66465;
 	padding-left: 5px;
 	background-color: transparent;
+}
+
+.butspeed{
+	height: 2rem;
+	margin: 0.2rem;
 }

@@ -55,6 +55,26 @@ window.onload = function () {
 					volumeVideo = el.volume;
 					muteVideo = el.muted;
 				}
+				const buttons = vt.querySelectorAll(".butspeed")
+				buttons.forEach(element => {
+					(element as HTMLButtonElement).onclick = (e) => {
+						const el = e.target as HTMLButtonElement
+						switch (el.innerText) {
+							case "1.0x":
+								v.playbackRate = 1;
+							break;
+							case "1.25x":
+								v.playbackRate = 1.25;
+							break;
+							case "1.5x":
+								v.playbackRate = 1.5;
+							break;
+							case "2.0x":
+								v.playbackRate = 2;
+							break;
+						}
+					}
+				});
 				post.append(vt)
 				break;
 			case "mp3":

@@ -31,9 +31,9 @@ window.onload = function () {
         switch (ext) {
             case "mp4":
                 var vt = document.getElementById("templatevideo").content.cloneNode(true);
-                var v = vt.querySelector("video");
-                v.setAttribute("src", path);
-                v.onplaying = function (e) {
+                var v_1 = vt.querySelector("video");
+                v_1.setAttribute("src", path);
+                v_1.onplaying = function (e) {
                     var el = e.target;
                     if (el == currentVideo)
                         return;
@@ -44,11 +44,31 @@ window.onload = function () {
                     }
                     currentVideo = el;
                 };
-                v.onvolumechange = function (e) {
+                v_1.onvolumechange = function (e) {
                     var el = e.target;
                     volumeVideo = el.volume;
                     muteVideo = el.muted;
                 };
+                var buttons = vt.querySelectorAll(".butspeed");
+                buttons.forEach(function (element) {
+                    element.onclick = function (e) {
+                        var el = e.target;
+                        switch (el.innerText) {
+                            case "1.0x":
+                                v_1.playbackRate = 1;
+                                break;
+                            case "1.25x":
+                                v_1.playbackRate = 1.25;
+                                break;
+                            case "1.5x":
+                                v_1.playbackRate = 1.5;
+                                break;
+                            case "2.0x":
+                                v_1.playbackRate = 2;
+                                break;
+                        }
+                    };
+                });
                 post.append(vt);
                 break;
             case "mp3":
