@@ -134,6 +134,15 @@ a {
 .butspeed{
 	height: 2rem;
 	margin: 0.2rem;
+	border-radius: 10px;
+    border: solid 1px #797979;
+	box-shadow: #000000 0 0 5px 0px;
+}
+.butspeed:active {
+	box-shadow: none;
+}
+.butspeed:hover{
+	box-shadow: #000000 0 0 7px 0px;
 }
 .butwrapper{
 	position: absolute;
@@ -141,7 +150,7 @@ a {
 	top: 0;
 	display: none;
 }
-.video:hover + .butwrapper{
+.video:hover + .butwrapper, .butwrapper:hover{
 	display: block;
 	transition: all 1s;
 }
