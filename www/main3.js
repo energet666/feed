@@ -69,6 +69,8 @@ window.onload = function () {
                         }
                     };
                 });
+                var videoname = vt.querySelector(".videoname");
+                videoname.innerText = path.split("/").pop();
                 post.append(vt);
                 break;
             case "mp3":

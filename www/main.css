@@ -149,8 +149,17 @@ a {
 	left: 0;
 	top: 0;
 	display: none;
+	text-align: start;
 }
 .video:hover + .butwrapper, .butwrapper:hover{
 	display: block;
 	transition: all 1s;
+}
+.videoname{
+	text-shadow: 0 0 2px white;
+    font-weight: 500;
+    margin: 5px;
+    background-color: rgb(255 255 255 / 70%);
+    border-radius: 3px;
+    padding: 3px;
 }

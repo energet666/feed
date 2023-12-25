@@ -75,6 +75,8 @@ window.onload = function () {
 						}
 					}
 				});
+				const videoname = vt.querySelector(".videoname") as HTMLParagraphElement
+				videoname.innerText = path.split("/").pop()!;
 				post.append(vt)
 				break;
 			case "mp3":
