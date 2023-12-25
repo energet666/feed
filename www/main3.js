@@ -142,7 +142,6 @@ window.onload = function () {
         };
         content.prepend(d); //делается в конце функции т.к. после выполнения данной команды содержимое d недоступно
         comments.scrollTo(0, comments.scrollHeight);
-        document.querySelector("html").scrollTo(0, 0);
     }
     socketUpload.onmessage = appendToBody;
     socket.addEventListener("message", function (e) {
@@ -180,4 +179,10 @@ window.onload = function () {
             socketUpload.send(el);
         }
     });
+    function snappingOn() {
+        document.querySelector("html").classList.add("snappingOn");
+        document.removeEventListener("scroll", snappingOn);
+    }
+    document.addEventListener("scroll", snappingOn); //при начальной загрузке карточек из-за снаппинга лента сама скролится вниз,
+    //поэтому включаю снаппинг когда скролит юзер
 };

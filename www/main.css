@@ -6,6 +6,8 @@ html {
 	user-select: none; /* Standard */
 	font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 	font-size: 15px;
+}
+.snappingOn{
 	scroll-snap-type: y proximity;
 }
 

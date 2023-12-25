@@ -151,7 +151,6 @@ window.onload = function () {
 		}
 		content.prepend(d)//делается в конце функции т.к. после выполнения данной команды содержимое d недоступно
 		comments.scrollTo(0, comments.scrollHeight)
-		document.querySelector("html")!.scrollTo(0,0)
 	}
 
 	socketUpload.onmessage = appendToBody;
@@ -163,13 +162,13 @@ window.onload = function () {
 		//ring.play()
 	})
 
-	socket.onclose = function () {
+	socket.onclose = () => {
 		console.log('Service', "WebSocket Disconnected");
 	}
-	socket.onerror = function () {
+	socket.onerror = () => {
 		console.log('Service', "WebSocket Error");
 	}
-	socket.onopen = function () {
+	socket.onopen = () => {
 		console.log('Service', "WebSocket Connected");
 		// socket.send('Ураааааа!')
 	}
@@ -192,4 +191,10 @@ window.onload = function () {
 			socketUpload.send(el);
 		}
 	})
+	function snappingOn() {
+		document.querySelector("html")!.classList.add("snappingOn")
+		document.removeEventListener("scroll", snappingOn)
+	}
+	document.addEventListener("scroll", snappingOn)//при начальной загрузке карточек из-за снаппинга лента сама скролится вниз,
+													//поэтому включаю снаппинг когда скролит юзер
 }
