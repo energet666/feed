@@ -130,6 +130,7 @@ window.onload = function () {
 		xhr.onload = () => {
 			if(xhr.status==200){
 				comments.innerText = xhr.response + "<history restored>\n\n"
+				comments.scrollTo(0, comments.scrollHeight)
 			}
 		}
 
@@ -150,7 +151,6 @@ window.onload = function () {
 			}
 		}
 		content.prepend(d)//делается в конце функции т.к. после выполнения данной команды содержимое d недоступно
-		comments.scrollTo(0, comments.scrollHeight)
 	}
 
 	socketUpload.onmessage = appendToBody;
