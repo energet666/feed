@@ -10,8 +10,10 @@ html {
 .snappingOn{
 	scroll-snap-type: y proximity;
 }
-
-body {
+body{
+	margin: 0;
+}
+.maincontainer {
 	width: 40%;
 	max-width: 500px;
 	min-width: 400px;
@@ -68,7 +70,7 @@ a {
 }
 
 @media (max-width: 768px) {
-	body {
+	.maincontainer {
 		width: 98%;
 		min-width: none;
 		max-width: none;
