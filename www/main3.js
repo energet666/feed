@@ -180,7 +180,7 @@ window.onload = function () {
         }
     });
     function snappingOn() {
-        document.querySelector("html").classList.add("snappingOn");
+        document.documentElement.classList.add("snappingOn");
         document.removeEventListener("scroll", snappingOn);
     }
     document.addEventListener("scroll", snappingOn); //при начальной загрузке карточек из-за снаппинга лента сама скролится вниз,
