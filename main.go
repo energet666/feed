@@ -12,6 +12,7 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+	"sync"
 
 	"golang.org/x/net/websocket"
 )
@@ -53,7 +54,12 @@ func main() {
 	http.Handle("/upload", websocket.Handler(s.HandleWsUpload))
 	http.Handle("/ws", websocket.Handler(s.HandleWs))
 
-	go http.ListenAndServe(":"+port, nil)
+	wg := sync.WaitGroup{}
+	wg.Add(1)
+	go func() {
+		http.ListenAndServe(":"+port, nil)
+		wg.Done()
+	}()
 
 	log.Println("FileServer listen localhost:" + port + " ...")
 	log.Println("WebSocketServer listen localhost:" + port + "/ws...")
@@ -61,12 +67,13 @@ func main() {
 
 	startBrowser("http://localhost:" + port)
 
-	var read []byte
-	for {
-		fmt.Scan(&read)
-		fmt.Println("read: ", string(read))
-		s.Broadcast(read, "ws")
-	}
+	// var read []byte
+	// for {
+	// 	fmt.Scan(&read)
+	// 	fmt.Println("read: ", string(read))
+	// 	s.Broadcast(read, "ws")
+	// }
+	wg.Wait()
 }
 
 func myFIleServerHandler(w http.ResponseWriter, r *http.Request) {
