@@ -3,6 +3,7 @@ package main
 import (
 	"feed/pkg/wsserver"
 	"fmt"
+	"io"
 	"log"
 	"net/http"
 	"os"
@@ -50,8 +51,40 @@ func main() {
 
 	s := wsserver.NewWsServer(inUpload)
 
-	http.Handle("/", http.HandlerFunc(myFIleServerHandler))
-	http.Handle("/upload", websocket.Handler(s.HandleWsUpload))
+	http.Handle("/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		fmt.Println(r.RemoteAddr, r.Method, r.RequestURI)
+		switch r.Method {
+		case "GET":
+			http.FileServer(http.Dir("www")).ServeHTTP(w, r)
+		case "POST":
+			// the FormFile function takes in the POST input id file
+			file, header, err := r.FormFile("file")
+			if err != nil {
+				fmt.Println(err)
+				return
+			}
+
+			defer file.Close()
+
+			out, err := os.Create("./www/upload/" + header.Filename)
+			if err != nil {
+				fmt.Printf("Unable to create the file for writing. Check your write access privilege")
+				return
+			}
+
+			defer out.Close()
+
+			// write the content from POST to the file
+			_, err = io.Copy(out, file)
+			if err != nil {
+				fmt.Println(err)
+			}
+			fmt.Println(header.Filename + " saved")
+		}
+	}))
+	// http.Handle("/uploadXML", http.HandlerFunc(s.HandleXmlUpload))
+
+	http.Handle("/uploadws", websocket.Handler(s.HandleWsUpload))
 	http.Handle("/ws", websocket.Handler(s.HandleWs))
 
 	wg := sync.WaitGroup{}
@@ -63,7 +96,7 @@ func main() {
 
 	log.Println("FileServer listen localhost:" + port + " ...")
 	log.Println("WebSocketServer listen localhost:" + port + "/ws...")
-	log.Println("WebSocketServer listen localhost:" + port + "/upload...")
+	log.Println("WebSocketServer listen localhost:" + port + "/uploadws...")
 
 	startBrowser("http://localhost:" + port)
 
@@ -74,11 +107,6 @@ func main() {
 	// 	s.Broadcast(read, "ws")
 	// }
 	wg.Wait()
-}
-
-func myFIleServerHandler(w http.ResponseWriter, r *http.Request) {
-	fmt.Println(r.RemoteAddr, r.Method, r.RequestURI)
-	http.FileServer(http.Dir("www")).ServeHTTP(w, r)
 }
 
 func startBrowser(url string) {

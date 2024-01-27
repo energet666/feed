@@ -15,7 +15,7 @@ window.onload = function () {
 	const content = document.getElementById('content') as HTMLDivElement
 
 	const socket = new WebSocket("ws://" + ip + "/ws");
-	const socketUpload = new WebSocket("ws://" + ip + "/upload");
+	const socketUpload = new WebSocket("ws://" + ip + "/uploadws");
 
 	function appendToBody(event: MessageEvent) {
 		const d = tmp.content.cloneNode(true) as DocumentFragment
@@ -180,15 +180,27 @@ window.onload = function () {
 		e.preventDefault();
 	})
 	document.addEventListener("drop", (e) => {
+		// e.preventDefault();
+		// var fs = e.dataTransfer!.files;
+		// for (let index = 0; index < fs.length; index++) {
+		// 	const el = fs[index];
+		// 	console.log('You selected ' + el.name);
+		// 	socketUpload.send(el.name);
+		// 	socketUpload.send(el.size.toString());
+		// 	console.log('File size: ' + el.size);
+		// 	socketUpload.send(el);
+		// }
 		e.preventDefault();
 		var fs = e.dataTransfer!.files;
 		for (let index = 0; index < fs.length; index++) {
 			const el = fs[index];
 			console.log('You selected ' + el.name);
-			socketUpload.send(el.name);
-			socketUpload.send(el.size.toString());
 			console.log('File size: ' + el.size);
-			socketUpload.send(el);
+			var formData = new FormData();
+			formData.append("file", el);
+			var xhr = new XMLHttpRequest()
+			xhr.open('POST', el.name, true)
+			xhr.send(formData);
 		}
 	})
 	function snappingOn() {

@@ -22,8 +22,13 @@ func NewWsServer(f func(ws *websocket.Conn)) *wsServer {
 	}
 }
 
+//	func (s *wsServer) HandleXmlUpload(w http.ResponseWriter, r *http.Request) {
+//		if r.Method == "POST" {
+//			fmt.Println("recived POST")
+//		}
+//	}
 func (s *wsServer) HandleWsUpload(ws *websocket.Conn) {
-	s.conns[ws] = "upload"
+	s.conns[ws] = "uploadws"
 	buf := make([]byte, 1024)
 	fmt.Println(`new incoming "upload" connection from client:`, ws.Request().RemoteAddr)
 	fmt.Println("WS list: ", s.conns)
@@ -114,8 +119,8 @@ func (s *wsServer) HandleWs(ws *websocket.Conn) {
 }
 
 func (s *wsServer) Broadcast(b []byte, t string) {
-	for ws := range s.conns {
-		if s.conns[ws] == t {
+	for ws, tt := range s.conns {
+		if tt == t {
 			go func(wst *websocket.Conn) {
 				wst.Write(b)
 			}(ws)
