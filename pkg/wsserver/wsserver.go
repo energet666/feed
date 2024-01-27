@@ -79,7 +79,7 @@ func (s *wsServer) HandleWsUpload(ws *websocket.Conn) {
 				fmt.Println("Uploading complite!")
 				state = 0
 
-				s.Broadcast([]byte(`./upload/`+name), "upload")
+				s.Broadcast([]byte(`./upload/`+name), "uploadws")
 			}
 		}
 	}

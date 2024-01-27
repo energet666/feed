@@ -51,38 +51,36 @@ func main() {
 
 	s := wsserver.NewWsServer(inUpload)
 
+	http.Handle("/uploadxml/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// the FormFile function takes in the POST input id file
+		file, header, err := r.FormFile("file")
+		if err != nil {
+			fmt.Println(err)
+			return
+		}
+
+		defer file.Close()
+
+		out, err := os.Create("./www/upload/" + header.Filename)
+		if err != nil {
+			fmt.Printf("Unable to create the file for writing. Check your write access privilege")
+			return
+		}
+
+		defer out.Close()
+
+		// write the content from POST to the file
+		_, err = io.Copy(out, file)
+		if err != nil {
+			fmt.Println(err)
+		}
+		fmt.Printf("%s %d Bytes saved\n", header.Filename, header.Size)
+		s.Broadcast([]byte(`./upload/`+header.Filename), "uploadws")
+	}))
 	http.Handle("/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		fmt.Println(r.RemoteAddr, r.Method, r.RequestURI)
-		switch r.Method {
-		case "GET":
-			http.FileServer(http.Dir("www")).ServeHTTP(w, r)
-		case "POST":
-			// the FormFile function takes in the POST input id file
-			file, header, err := r.FormFile("file")
-			if err != nil {
-				fmt.Println(err)
-				return
-			}
-
-			defer file.Close()
-
-			out, err := os.Create("./www/upload/" + header.Filename)
-			if err != nil {
-				fmt.Printf("Unable to create the file for writing. Check your write access privilege")
-				return
-			}
-
-			defer out.Close()
-
-			// write the content from POST to the file
-			_, err = io.Copy(out, file)
-			if err != nil {
-				fmt.Println(err)
-			}
-			fmt.Println(header.Filename + " saved")
-		}
+		http.FileServer(http.Dir("www")).ServeHTTP(w, r)
 	}))
-	// http.Handle("/uploadXML", http.HandlerFunc(s.HandleXmlUpload))
 
 	http.Handle("/uploadws", websocket.Handler(s.HandleWsUpload))
 	http.Handle("/ws", websocket.Handler(s.HandleWs))

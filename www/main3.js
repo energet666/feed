@@ -187,7 +187,7 @@ window.onload = function () {
             var formData = new FormData();
             formData.append("file", el);
             var xhr = new XMLHttpRequest();
-            xhr.open('POST', el.name, true);
+            xhr.open('POST', "uploadxml/" + el.name, true);
             xhr.send(formData);
         }
     });
