@@ -3,36 +3,16 @@ package main
 import (
 	"feed/pkg/wsserver"
 	"fmt"
-	"io"
 	"log"
 	"net/http"
 	"os"
 	"os/exec"
-	"path/filepath"
 	"runtime"
-	"sort"
 	"strconv"
-	"strings"
 	"sync"
 
 	"golang.org/x/net/websocket"
 )
-
-func inUpload(ws *websocket.Conn) {
-	files, _ := os.ReadDir("./www/upload")
-	sort.Slice(files, func(i, j int) bool {
-		finfoi, _ := files[i].Info()
-		finfoj, _ := files[j].Info()
-		return finfoi.ModTime().Before(finfoj.ModTime())
-	})
-	for _, f := range files {
-		ext := filepath.Ext(f.Name())
-		ext = strings.ToLower(ext)
-		if ext != "._msg" {
-			ws.Write([]byte(`./upload/` + f.Name()))
-		}
-	}
-}
 
 func main() {
 	port := "12345"
@@ -49,40 +29,11 @@ func main() {
 		port = os.Args[1]
 	}
 
-	s := wsserver.NewWsServer(inUpload)
+	s := wsserver.NewWsServer()
 
-	http.Handle("/uploadxml/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		// the FormFile function takes in the POST input id file
-		file, header, err := r.FormFile("file")
-		if err != nil {
-			fmt.Println(err)
-			return
-		}
-
-		defer file.Close()
-
-		out, err := os.Create("./www/upload/" + header.Filename)
-		if err != nil {
-			fmt.Printf("Unable to create the file for writing. Check your write access privilege")
-			return
-		}
-
-		defer out.Close()
-
-		// write the content from POST to the file
-		_, err = io.Copy(out, file)
-		if err != nil {
-			fmt.Println(err)
-		}
-		fmt.Printf("%s %d Bytes saved\n", header.Filename, header.Size)
-		s.Broadcast([]byte(`./upload/`+header.Filename), "uploadws")
-	}))
-	http.Handle("/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		fmt.Println(r.RemoteAddr, r.Method, r.RequestURI)
-		http.FileServer(http.Dir("www")).ServeHTTP(w, r)
-	}))
-
-	http.Handle("/uploadws", websocket.Handler(s.HandleWsUpload))
+	http.Handle("/uploadxml/", http.HandlerFunc(s.HandleUploadxml))
+	http.Handle("/", http.HandlerFunc(s.HandleRoot))
+	http.Handle("/uploadws", websocket.Handler(s.HandleUploadws))
 	http.Handle("/ws", websocket.Handler(s.HandleWs))
 
 	wg := sync.WaitGroup{}
@@ -98,12 +49,6 @@ func main() {
 
 	startBrowser("http://localhost:" + port)
 
-	// var read []byte
-	// for {
-	// 	fmt.Scan(&read)
-	// 	fmt.Println("read: ", string(read))
-	// 	s.Broadcast(read, "ws")
-	// }
 	wg.Wait()
 }
 

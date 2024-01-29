@@ -4,41 +4,44 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"net/http"
 	"os"
-	"strconv"
+	"path/filepath"
+	"sort"
+	"strings"
 
 	"golang.org/x/net/websocket"
 )
 
 type wsServer struct {
-	conns          map[*websocket.Conn]string
-	uploadCallback func(ws *websocket.Conn)
+	conns map[*websocket.Conn]string
 }
 
-func NewWsServer(f func(ws *websocket.Conn)) *wsServer {
+func NewWsServer() *wsServer {
 	return &wsServer{
-		conns:          make(map[*websocket.Conn]string),
-		uploadCallback: f,
+		conns: make(map[*websocket.Conn]string),
 	}
 }
 
-//	func (s *wsServer) HandleXmlUpload(w http.ResponseWriter, r *http.Request) {
-//		if r.Method == "POST" {
-//			fmt.Println("recived POST")
-//		}
-//	}
-func (s *wsServer) HandleWsUpload(ws *websocket.Conn) {
+func (s *wsServer) HandleUploadws(ws *websocket.Conn) {
 	s.conns[ws] = "uploadws"
 	buf := make([]byte, 1024)
-	fmt.Println(`new incoming "upload" connection from client:`, ws.Request().RemoteAddr)
+	fmt.Println(`new incoming "uploadws" connection from client:`, ws.Request().RemoteAddr)
 	fmt.Println("WS list: ", s.conns)
-	var state int = 0
-	var fo *os.File
-	var name string
-	var size int
-	var nn int = 0
 
-	s.uploadCallback(ws)
+	files, _ := os.ReadDir("./www/upload")
+	sort.Slice(files, func(i, j int) bool {
+		finfoi, _ := files[i].Info()
+		finfoj, _ := files[j].Info()
+		return finfoi.ModTime().Before(finfoj.ModTime())
+	})
+	for _, f := range files {
+		ext := filepath.Ext(f.Name())
+		ext = strings.ToLower(ext)
+		if ext != "._msg" {
+			ws.Write([]byte(`./upload/` + f.Name()))
+		}
+	}
 
 	for {
 		n, err := ws.Read(buf)
@@ -49,45 +52,17 @@ func (s *wsServer) HandleWsUpload(ws *websocket.Conn) {
 				fmt.Println("WS list: ", s.conns)
 				break
 			}
-			fmt.Println("read error: ", err)
+			fmt.Println("uploadws read error: ", err)
 			continue
 		}
 		msg := buf[:n]
-		switch state {
-		case 0:
-			name = string(msg)
-			fmt.Println("File name: ", string(name))
-			os.Create("./www/upload/" + name)
-			nn = 0
-			state = 1
-		case 1:
-			size, _ = strconv.Atoi(string(msg))
-			fmt.Println("Size: ", size)
-			state = 2
-		case 2:
-			fo, err = os.OpenFile("./www/upload/"+name, os.O_APPEND|os.O_WRONLY, 0644)
-			if err != nil {
-				fmt.Println("OpenFile err: ", err)
-			}
-			n, err := fo.Write(msg)
-			nn += n
-			if err != nil {
-				fmt.Println("Write err: ", err)
-			}
-			fo.Close()
-			if nn == size {
-				fmt.Println("Uploading complite!")
-				state = 0
-
-				s.Broadcast([]byte(`./upload/`+name), "uploadws")
-			}
-		}
+		fmt.Println("Recived from uploadws: " + string(msg))
 	}
 }
 
 type Message struct {
-	Id  string
-	Txt string
+	Id  string //имя файла, к которому оставлен коментарий
+	Txt string //текст коментария
 }
 
 func (s *wsServer) HandleWs(ws *websocket.Conn) {
@@ -118,12 +93,48 @@ func (s *wsServer) HandleWs(ws *websocket.Conn) {
 	}
 }
 
+func (s *wsServer) HandleUploadxml(w http.ResponseWriter, r *http.Request) {
+	// the FormFile function takes in the POST input id file
+	file, header, err := r.FormFile("file")
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+
+	defer file.Close()
+
+	out, err := os.Create("./www/upload/" + header.Filename)
+	if err != nil {
+		fmt.Printf("Unable to create the file for writing. Check your write access privilege")
+		return
+	}
+
+	defer out.Close()
+
+	// write the content from POST to the file
+	_, err = io.Copy(out, file)
+	if err != nil {
+		fmt.Println(err)
+	}
+	fmt.Printf("%s %d Bytes saved\n", header.Filename, header.Size)
+	s.Broadcast([]byte(`./upload/`+header.Filename), "uploadws")
+}
+
+func (s *wsServer) HandleRoot(w http.ResponseWriter, r *http.Request) {
+	fmt.Println(r.RemoteAddr, r.Method, r.RequestURI)
+	http.FileServer(http.Dir("www")).ServeHTTP(w, r)
+}
+
 func (s *wsServer) Broadcast(b []byte, t string) {
 	for ws, tt := range s.conns {
 		if tt == t {
-			go func(wst *websocket.Conn) {
-				wst.Write(b)
-			}(ws)
+			// go func(wst *websocket.Conn) {
+			// 	wst.Write(b)
+			// }(ws)
+			ws := ws //без этого не захватывается переменная в замыкании
+			go func() {
+				ws.Write(b)
+			}()
 		}
 	}
 }
