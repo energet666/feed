@@ -187,6 +187,10 @@ window.onload = function () {
             var formData = new FormData();
             formData.append("file", el);
             var xhr = new XMLHttpRequest();
+            xhr.upload.onprogress = function (e) {
+                var ev = e;
+                console.log("Upload progress: " + (ev.loaded / ev.total).toFixed(2));
+            };
             xhr.open('POST', "uploadxml/" + el.name, true);
             xhr.send(formData);
         }
