@@ -122,6 +122,7 @@ func (s *wsServer) HandleUploadxml(w http.ResponseWriter, r *http.Request) {
 
 func (s *wsServer) HandleRoot(w http.ResponseWriter, r *http.Request) {
 	fmt.Println(r.RemoteAddr, r.Method, r.RequestURI)
+	w.Header().Set("Cache-Control", "no-cache")
 	http.FileServer(http.Dir("www")).ServeHTTP(w, r)
 }
 
