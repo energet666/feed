@@ -161,6 +161,15 @@ window.onload = function () {
         console.log('Service', "WebSocket Connected");
         // socket.send('Ураааааа!')
     };
+    var over = document.querySelector(".over");
+    document.body.addEventListener("dragenter", function (e) {
+        e.preventDefault();
+        over.classList.add("show");
+    });
+    over.addEventListener("dragleave", function (e) {
+        e.preventDefault();
+        over.classList.remove("show");
+    });
     document.addEventListener("dragover", function (e) {
         e.preventDefault();
     });
@@ -168,16 +177,6 @@ window.onload = function () {
         e.preventDefault();
     });
     document.addEventListener("drop", function (e) {
-        // e.preventDefault();
-        // var fs = e.dataTransfer!.files;
-        // for (let index = 0; index < fs.length; index++) {
-        // 	const el = fs[index];
-        // 	console.log('You selected ' + el.name);
-        // 	socketUpload.send(el.name);
-        // 	socketUpload.send(el.size.toString());
-        // 	console.log('File size: ' + el.size);
-        // 	socketUpload.send(el);
-        // }
         e.preventDefault();
         var fs = e.dataTransfer.files;
         for (var index = 0; index < fs.length; index++) {
@@ -189,7 +188,12 @@ window.onload = function () {
             var xhr = new XMLHttpRequest();
             xhr.upload.onprogress = function (e) {
                 var ev = e;
-                console.log("Upload progress: " + (ev.loaded / ev.total).toFixed(2));
+                console.log("Upload progress: " + (ev.loaded / ev.total * 100).toFixed(0) + "%");
+                over.innerText = "Upload progress: " + (ev.loaded / ev.total * 100).toFixed(0) + "%";
+            };
+            xhr.upload.onloadend = function (e) {
+                over.classList.remove("show");
+                over.innerText = "Drop it!";
             };
             xhr.open('POST', "uploadxml/" + el.name, true);
             xhr.send(formData);

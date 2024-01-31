@@ -173,6 +173,16 @@ window.onload = function () {
 		// socket.send('Ураааааа!')
 	}
 
+	const over = document.querySelector(".over") as HTMLDivElement
+	document.body.addEventListener("dragenter", (e) => {
+		e.preventDefault();
+		over.classList.add("show")
+	})
+	over.addEventListener("dragleave", (e) => {
+		e.preventDefault();
+		over.classList.remove("show")
+	})
+
 	document.addEventListener("dragover", (e) => {
 		e.preventDefault();
 	})
@@ -180,16 +190,6 @@ window.onload = function () {
 		e.preventDefault();
 	})
 	document.addEventListener("drop", (e) => {
-		// e.preventDefault();
-		// var fs = e.dataTransfer!.files;
-		// for (let index = 0; index < fs.length; index++) {
-		// 	const el = fs[index];
-		// 	console.log('You selected ' + el.name);
-		// 	socketUpload.send(el.name);
-		// 	socketUpload.send(el.size.toString());
-		// 	console.log('File size: ' + el.size);
-		// 	socketUpload.send(el);
-		// }
 		e.preventDefault();
 		var fs = e.dataTransfer!.files;
 		for (let index = 0; index < fs.length; index++) {
@@ -201,7 +201,12 @@ window.onload = function () {
 			var xhr = new XMLHttpRequest()
 			xhr.upload.onprogress = (e) => {
 				const ev = e as ProgressEvent
-				console.log("Upload progress: " + (ev.loaded/ev.total).toFixed(2))
+				console.log("Upload progress: " + (ev.loaded/ev.total*100).toFixed(0) + "%")
+				over.innerText = "Upload progress: " + (ev.loaded/ev.total*100).toFixed(0) + "%"
+			}
+			xhr.upload.onloadend = (e) => {
+				over.classList.remove("show")
+				over.innerText = "Drop it!"
 			}
 			xhr.open('POST', "uploadxml/" + el.name, true)
 			xhr.send(formData);
