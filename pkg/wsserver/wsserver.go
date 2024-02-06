@@ -93,6 +93,39 @@ func (s *wsServer) HandleWs(ws *websocket.Conn) {
 	}
 }
 
+type MouseXY struct {
+	X int
+	Y int
+}
+
+func (s *wsServer) HandleEventws(ws *websocket.Conn) {
+	s.conns[ws] = "eventws"
+	buf := make([]byte, 1024)
+	fmt.Println(`New incoming "eventws" connection from client:`, ws.Request().RemoteAddr)
+	fmt.Println("WS list: ", s.conns)
+	for {
+		n, err := ws.Read(buf)
+		if err != nil {
+			if err == io.EOF {
+				fmt.Println("Connection closed: ", ws.Request().RemoteAddr)
+				delete(s.conns, ws)
+				fmt.Println("WS list: ", s.conns)
+				break
+			}
+			fmt.Println("Read error: ", err)
+			continue
+		}
+		msg := buf[:n]
+
+		var mxy MouseXY
+		json.Unmarshal(msg, &mxy)
+		fmt.Println(string(msg))
+		fmt.Println(mxy.X, mxy.Y)
+
+		ws.Write([]byte(msg))
+	}
+}
+
 func (s *wsServer) HandleUploadxml(w http.ResponseWriter, r *http.Request) {
 	// the FormFile function takes in the POST input id file
 	file, header, err := r.FormFile("file")

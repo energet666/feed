@@ -35,6 +35,7 @@ func main() {
 	http.Handle("/", http.HandlerFunc(s.HandleRoot))
 	http.Handle("/uploadws", websocket.Handler(s.HandleUploadws))
 	http.Handle("/ws", websocket.Handler(s.HandleWs))
+	http.Handle("/eventws", websocket.Handler(s.HandleEventws))
 
 	wg := sync.WaitGroup{}
 	wg.Add(1)

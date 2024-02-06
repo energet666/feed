@@ -1,4 +1,3 @@
-"use strict";
 window.onload = function () {
     var ip = window.location.host;
     var currentVideo = null;
@@ -13,6 +12,7 @@ window.onload = function () {
     var content = document.getElementById('content');
     var socket = new WebSocket("ws://" + ip + "/ws");
     var socketUpload = new WebSocket("ws://" + ip + "/uploadws");
+    var socketEvent = new WebSocket("ws://" + ip + "/eventws");
     function appendToBody(event) {
         var d = tmp.content.cloneNode(true);
         var post = d.querySelector(".post");
@@ -162,7 +162,7 @@ window.onload = function () {
         // socket.send('Ураааааа!')
     };
     var over = document.querySelector(".over");
-    document.body.addEventListener("dragenter", function (e) {
+    document.addEventListener("dragenter", function (e) {
         e.preventDefault();
         over.classList.add("show");
     });
@@ -205,4 +205,24 @@ window.onload = function () {
     }
     document.addEventListener("scroll", snappingOn); //при начальной загрузке карточек из-за снаппинга лента сама скролится вниз,
     //поэтому включаю снаппинг когда скролит юзер
+    var q = document.createElement("div");
+    q.id = "point";
+    q.classList.add("rect");
+    var w = 30;
+    q.style.width = w + "px";
+    q.style.height = w + "px";
+    document.body.appendChild(q);
+    document.addEventListener("mousemove", function (e) {
+        var ev = e;
+        console.log(ev.clientX, ev.clientY);
+        socketEvent.send(JSON.stringify({
+            X: ev.clientX,
+            Y: ev.clientY
+        }));
+    });
+    socketEvent.onmessage = function (e) {
+        var d = JSON.parse(e.data);
+        q.style.top = d.Y - w / 2 + "px";
+        q.style.left = d.X - w / 2 + "px";
+    };
 };

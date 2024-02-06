@@ -1,21 +1,20 @@
-"use strict";
-
 window.onload = function () {
 	const ip = window.location.host
-	var currentVideo:HTMLVideoElement|null = null
-	var volumeVideo = 1
-	var muteVideo = false
-	var currentMusic:HTMLAudioElement|null = null
-	var volumeMusic = 1
-	var muteMusic = false
-	var lastMsg = ""
-	var ring = new Audio("./upload/Iphone - Message Tone.mp3")
+	let currentVideo:HTMLVideoElement|null = null
+	let volumeVideo = 1
+	let muteVideo = false
+	let currentMusic:HTMLAudioElement|null = null
+	let volumeMusic = 1
+	let muteMusic = false
+	let lastMsg = ""
+	let ring = new Audio("./upload/Iphone - Message Tone.mp3")
 
 	const tmp = document.getElementById("templatecard") as HTMLTemplateElement
 	const content = document.getElementById('content') as HTMLDivElement
 
 	const socket = new WebSocket("ws://" + ip + "/ws");
 	const socketUpload = new WebSocket("ws://" + ip + "/uploadws");
+    const socketEvent = new WebSocket("ws://" + ip + "/eventws");
 
 	function appendToBody(event: MessageEvent) {
 		const d = tmp.content.cloneNode(true) as DocumentFragment
@@ -26,8 +25,8 @@ window.onload = function () {
 
 		const path = event.data as string
 		wrapper.id = path
-		var spl = path.split(".")
-		var ext = ""
+		let spl = path.split(".")
+		let ext = ""
 		// If spl.length is one, it's a visible file with no extension ie. file
 		// If spl[0] === "" and spl.length === 2 it's a hidden file with no extension ie. .htaccess
 		if( !(spl.length === 1 || ( spl[0] === "" && spl.length === 2 )) ){
@@ -36,7 +35,7 @@ window.onload = function () {
 		switch (ext) {
 			case "mp4":
 				const vt = (document.getElementById("templatevideo") as HTMLTemplateElement).content.cloneNode(true) as DocumentFragment
-				const v = vt.querySelector("video")!
+				const v = vt.querySelector("video")! as HTMLVideoElement
 				v.setAttribute("src", path)
 
 				v.onplaying = (e)=>{
@@ -123,7 +122,7 @@ window.onload = function () {
 				break;
 		}
 
-		var xhr = new XMLHttpRequest()
+		let xhr = new XMLHttpRequest()
 		xhr.open('GET', path + "._msg", true)
 		xhr.setRequestHeader("Cache-Control", "no-cache")
 		xhr.send()
@@ -174,7 +173,7 @@ window.onload = function () {
 	}
 
 	const over = document.querySelector(".over") as HTMLDivElement
-	document.body.addEventListener("dragenter", (e) => {
+	document.addEventListener("dragenter", (e) => {
 		e.preventDefault();
 		over.classList.add("show")
 	})
@@ -191,14 +190,14 @@ window.onload = function () {
 	})
 	document.addEventListener("drop", (e) => {
 		e.preventDefault();
-		var fs = e.dataTransfer!.files;
+		let fs = e.dataTransfer!.files;
 		for (let index = 0; index < fs.length; index++) {
 			const el = fs[index];
 			console.log('You selected ' + el.name);
 			console.log('File size: ' + el.size);
-			var formData = new FormData();
+			let formData = new FormData();
 			formData.append("file", el);
-			var xhr = new XMLHttpRequest()
+			let xhr = new XMLHttpRequest()
 			xhr.upload.onprogress = (e) => {
 				const ev = e as ProgressEvent
 				console.log("Upload progress: " + (ev.loaded/ev.total*100).toFixed(0) + "%")
@@ -218,4 +217,27 @@ window.onload = function () {
 	}
 	document.addEventListener("scroll", snappingOn)//при начальной загрузке карточек из-за снаппинга лента сама скролится вниз,
 													//поэтому включаю снаппинг когда скролит юзер
+
+    let q = document.createElement("div")
+    q.id = "point"
+    q.classList.add("rect")
+    let w = 30
+    q.style.width = w + "px"
+    q.style.height = w + "px"
+    document.body.appendChild(q)
+
+    document.addEventListener("mousemove", (e)=>{
+        const ev = e
+        console.log(ev.clientX, ev.clientY)
+        
+        socketEvent.send(JSON.stringify({
+            X: ev.clientX,
+            Y: ev.clientY
+        }))
+    })
+    socketEvent.onmessage = (e) => {
+        const d = JSON.parse(e.data)
+        q.style.top = d.Y - w/2 + "px"
+        q.style.left = d.X - w/2 + "px"
+    }
 }
