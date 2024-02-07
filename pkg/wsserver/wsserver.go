@@ -14,12 +14,14 @@ import (
 )
 
 type wsServer struct {
-	conns map[*websocket.Conn]string
+	conns      map[*websocket.Conn]string
+	uploadPath string
 }
 
-func NewWsServer() *wsServer {
+func NewWsServer(uploadPath string) *wsServer {
 	return &wsServer{
-		conns: make(map[*websocket.Conn]string),
+		conns:      make(map[*websocket.Conn]string),
+		uploadPath: uploadPath,
 	}
 }
 
@@ -29,7 +31,7 @@ func (s *wsServer) HandleUploadws(ws *websocket.Conn) {
 	fmt.Println(`new incoming "uploadws" connection from client:`, ws.Request().RemoteAddr)
 	fmt.Println("WS list: ", s.conns)
 
-	files, _ := os.ReadDir("./www/upload")
+	files, _ := os.ReadDir(s.uploadPath)
 	sort.Slice(files, func(i, j int) bool {
 		finfoi, _ := files[i].Info()
 		finfoj, _ := files[j].Info()
@@ -136,7 +138,7 @@ func (s *wsServer) HandleUploadxml(w http.ResponseWriter, r *http.Request) {
 
 	defer file.Close()
 
-	out, err := os.Create("./www/upload/" + header.Filename)
+	out, err := os.Create(s.uploadPath + header.Filename)
 	if err != nil {
 		fmt.Printf("Unable to create the file for writing. Check your write access privilege")
 		return
@@ -157,6 +159,12 @@ func (s *wsServer) HandleRoot(w http.ResponseWriter, r *http.Request) {
 	fmt.Println(r.RemoteAddr, r.Method, r.RequestURI)
 	w.Header().Set("Cache-Control", "no-cache")
 	http.FileServer(http.Dir("www")).ServeHTTP(w, r)
+}
+
+func (s *wsServer) HandleUploadDir(w http.ResponseWriter, r *http.Request) {
+	fmt.Println(r.RemoteAddr, r.Method, r.URL.Path)
+	r.URL.Path = strings.Split(r.URL.Path, "/upload")[1]
+	http.FileServer(http.Dir(s.uploadPath)).ServeHTTP(w, r)
 }
 
 func (s *wsServer) Broadcast(b []byte, t string) {

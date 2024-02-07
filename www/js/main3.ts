@@ -1,4 +1,7 @@
+import {test} from './functions.js'
+
 window.onload = function () {
+	test("hi from module")
 	const ip = window.location.host
 	let currentVideo:HTMLVideoElement|null = null
 	let volumeVideo = 1
@@ -56,22 +59,9 @@ window.onload = function () {
 				}
 				const buttons = vt.querySelectorAll(".butspeed")
 				buttons.forEach(element => {
-					(element as HTMLButtonElement).onclick = (e) => {
-						const el = e.target as HTMLButtonElement
-						switch (el.innerText) {
-							case "1.0x":
-								v.playbackRate = 1;
-							break;
-							case "1.25x":
-								v.playbackRate = 1.25;
-							break;
-							case "1.5x":
-								v.playbackRate = 1.5;
-							break;
-							case "2.0x":
-								v.playbackRate = 2;
-							break;
-						}
+					(element as HTMLButtonElement).onclick = () => {
+						const el = element as HTMLButtonElement
+						v.playbackRate = Number(el.innerText.split("x")[0])
 					}
 				});
 				const videoname = vt.querySelector(".videoname") as HTMLParagraphElement
@@ -137,11 +127,10 @@ window.onload = function () {
 			if(event.key == 'Enter') {
 				const el = event.target as HTMLInputElement
 				const p = el.parentElement as HTMLDivElement
-				const com = p.querySelector(".comments") as HTMLDivElement
 				if (el.value.length == 0) {
 					return
 				}
-				lastMsg = el.value
+				lastMsg = el.value//на будущее для вывода последних комментариев
 				socket.send(JSON.stringify({
 					id: p.id,
 					txt: el.value
@@ -218,26 +207,26 @@ window.onload = function () {
 	document.addEventListener("scroll", snappingOn)//при начальной загрузке карточек из-за снаппинга лента сама скролится вниз,
 													//поэтому включаю снаппинг когда скролит юзер
 
-    let q = document.createElement("div")
-    q.id = "point"
-    q.classList.add("rect")
-    let w = 30
-    q.style.width = w + "px"
-    q.style.height = w + "px"
-    document.body.appendChild(q)
+    // let q = document.createElement("div")
+    // q.id = "point"
+    // q.classList.add("rect")
+    // let w = 30
+    // q.style.width = w + "px"
+    // q.style.height = w + "px"
+    // document.body.appendChild(q)
 
-    document.addEventListener("mousemove", (e)=>{
-        const ev = e
-        console.log(ev.clientX, ev.clientY)
+    // document.addEventListener("mousemove", (e)=>{
+    //     const ev = e
+    //     console.log(ev.clientX, ev.clientY)
         
-        socketEvent.send(JSON.stringify({
-            X: ev.clientX,
-            Y: ev.clientY
-        }))
-    })
-    socketEvent.onmessage = (e) => {
-        const d = JSON.parse(e.data)
-        q.style.top = d.Y - w/2 + "px"
-        q.style.left = d.X - w/2 + "px"
-    }
+    //     socketEvent.send(JSON.stringify({
+    //         X: ev.clientX,
+    //         Y: ev.clientY
+    //     }))
+    // })
+    // socketEvent.onmessage = (e) => {
+    //     const d = JSON.parse(e.data)
+    //     q.style.top = d.Y - w/2 + "px"
+    //     q.style.left = d.X - w/2 + "px"
+    // }
 }

@@ -11,28 +11,45 @@ import (
 	"strconv"
 	"sync"
 
+	"github.com/BurntSushi/toml"
 	"golang.org/x/net/websocket"
 )
 
+type opts struct {
+	Port        string
+	ContentPath string
+}
+
 func main() {
 	port := "12345"
-	if len(os.Args) > 1 {
-		if len(os.Args[1]) > 5 {
-			fmt.Println("Port must be a number in range 0..99999!")
-			return
-		}
-		_, err := strconv.Atoi(os.Args[1])
-		if err != nil {
-			fmt.Println("Port must be a number in range 0..99999!")
-			return
-		}
-		port = os.Args[1]
+	optsData, err := os.ReadFile("config.toml")
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	var inputOpts opts
+	_, err = toml.Decode(string(optsData), &inputOpts)
+	if err != nil {
+		fmt.Println(err)
+		return
 	}
 
-	s := wsserver.NewWsServer()
+	if len(inputOpts.Port) > 5 {
+		fmt.Println("Port must be a number in range 0..99999!")
+		return
+	}
+	_, err = strconv.Atoi(inputOpts.Port)
+	if err != nil {
+		fmt.Println("Port must be a number in range 0..99999!")
+		return
+	}
+	port = inputOpts.Port
 
-	http.Handle("/uploadxml/", http.HandlerFunc(s.HandleUploadxml))
+	s := wsserver.NewWsServer(inputOpts.ContentPath)
+
 	http.Handle("/", http.HandlerFunc(s.HandleRoot))
+	http.Handle("/upload/", http.HandlerFunc(s.HandleUploadDir))
+	http.Handle("/uploadxml/", http.HandlerFunc(s.HandleUploadxml))
 	http.Handle("/uploadws", websocket.Handler(s.HandleUploadws))
 	http.Handle("/ws", websocket.Handler(s.HandleWs))
 	http.Handle("/eventws", websocket.Handler(s.HandleEventws))
