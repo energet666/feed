@@ -88,7 +88,7 @@ func (s *wsServer) HandleWs(ws *websocket.Conn) {
 
 		var msgs Message
 		json.Unmarshal(msg, &msgs)
-		fo, _ := os.OpenFile("./www/"+msgs.Id+"._msg", os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0644)
+		fo, _ := os.OpenFile(s.uploadPath+strings.Split(msgs.Id, "/upload/")[1]+"._msg", os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0644)
 		fo.Write([]byte(msgs.Txt + "\n"))
 		fo.Close()
 		s.Broadcast(msg, "ws")
