@@ -7,51 +7,33 @@ import (
 	"net/http"
 	"os"
 	"os/exec"
+	"path"
 	"runtime"
-	"strconv"
+	"strings"
 	"sync"
 
 	"github.com/BurntSushi/toml"
 	"golang.org/x/net/websocket"
 )
 
-type opts struct {
-	Port        string
-	ContentPath string
-}
-
 func main() {
-	port := "12345"
-	optsData, err := os.ReadFile("config.toml")
+	var param parameters
+	err := readParametersFromToml("config.toml", &param)
 	if err != nil {
-		fmt.Println(err)
+		log.Println("ошибка чтения параметров:", err)
 		return
 	}
-	var inputOpts opts
-	_, err = toml.Decode(string(optsData), &inputOpts)
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
+	fmt.Printf("%+v", param)
+	port := fmt.Sprint(param.Port)
 
-	if len(inputOpts.Port) > 5 {
-		fmt.Println("Port must be a number in range 0..99999!")
-		return
-	}
-	_, err = strconv.Atoi(inputOpts.Port)
-	if err != nil {
-		fmt.Println("Port must be a number in range 0..99999!")
-		return
-	}
-	port = inputOpts.Port
-
-	s := wsserver.NewWsServer(inputOpts.ContentPath)
+	s := wsserver.NewWsServer(param.ContentPath)
 
 	http.Handle("/", http.HandlerFunc(s.HandleRoot))
 	http.Handle("/upload/", http.HandlerFunc(s.HandleUploadDir))
 	http.Handle("/uploadxml/", http.HandlerFunc(s.HandleUploadxml))
-	http.Handle("/uploadws", websocket.Handler(s.HandleUploadws))
+
 	http.Handle("/ws", websocket.Handler(s.HandleWs))
+	http.Handle("/uploadws", websocket.Handler(s.HandleUploadws))
 	http.Handle("/eventws", websocket.Handler(s.HandleEventws))
 
 	wg := sync.WaitGroup{}
@@ -68,6 +50,45 @@ func main() {
 	startBrowser("http://localhost:" + port)
 
 	wg.Wait()
+}
+
+type parameters struct {
+	Port        uint16
+	ContentPath string
+}
+
+func readParametersFromToml(tomlFileName string, dataStruct *parameters) error {
+	// optsData, err := os.ReadFile(tomlFileName)
+	// if err != nil {
+	// 	return fmt.Errorf("ошибка открытия файла конфигурации: %s", err)
+	// }
+	// _, err = toml.Decode(string(optsData), &dataStruct)
+	_, err := toml.DecodeFile(tomlFileName, &dataStruct)
+	if err != nil {
+		if os.IsNotExist(err) {
+			mokupParams := parameters{
+				Port:        12345,
+				ContentPath: "/some/path",
+			}
+			f, _ := os.Create(tomlFileName)
+			toml.NewEncoder(f).Encode(mokupParams)
+			return fmt.Errorf("не найден файл конфигурации %s. Файл создан, впишите в него необходимые значения параметров", tomlFileName)
+		}
+		return fmt.Errorf("ошибка декодирования файла конфигурации: %s", err)
+	}
+	// if tempDataStruct.Port > 0xFFFF {
+	// 	return fmt.Errorf("Port must be a number in range 0..65535!")
+	// }
+	dataStruct.ContentPath = strings.ReplaceAll(dataStruct.ContentPath, `\`, `/`)
+	dataStruct.ContentPath = path.Clean(dataStruct.ContentPath)
+	_, err = os.Stat(dataStruct.ContentPath)
+	if err != nil {
+		if os.IsNotExist(err) {
+			return fmt.Errorf("директория %s не существует", dataStruct.ContentPath)
+		}
+		return fmt.Errorf("ошибка получения информации о директории %s: %s", dataStruct.ContentPath, err)
+	}
+	return nil
 }
 
 func startBrowser(url string) {

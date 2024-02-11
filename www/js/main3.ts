@@ -12,89 +12,83 @@ window.onload = function () {
 	let lastMsg = ""
 	let ring = new Audio("./upload/Iphone - Message Tone.mp3")
 
-	const tmp = document.getElementById("templatecard") as HTMLTemplateElement
-	const content = document.getElementById('content') as HTMLDivElement
+	const cardTemplate = document.getElementById("templatecard") as HTMLTemplateElement
+	const contentBlock = document.getElementById('content') as HTMLDivElement
 
 	const socket = new WebSocket("ws://" + ip + "/ws");
 	const socketUpload = new WebSocket("ws://" + ip + "/uploadws");
     const socketEvent = new WebSocket("ws://" + ip + "/eventws");
 
 	function appendToBody(event: MessageEvent) {
-		const d = tmp.content.cloneNode(true) as DocumentFragment
+		const d = cardTemplate.content.cloneNode(true) as DocumentFragment
 		const post = d.querySelector(".post") as HTMLDivElement
 		const comments = d.querySelector(".comments") as HTMLDivElement
 		const msginput = d.querySelector(".msginput") as HTMLInputElement
 		const wrapper = d.querySelector(".wrapper") as HTMLDivElement
-
 		const path = event.data as string
+		const pathName = path.split("/").pop()!
+
 		wrapper.id = path
-		let spl = path.split(".")
-		let ext = ""
+		let pathNameSplit = pathName.split(".")
+		let pathNameExt = ""
 		// If spl.length is one, it's a visible file with no extension ie. file
 		// If spl[0] === "" and spl.length === 2 it's a hidden file with no extension ie. .htaccess
-		if( !(spl.length === 1 || ( spl[0] === "" && spl.length === 2 )) ){
-			ext = spl.pop()!.toLowerCase()
+		if( !(pathNameSplit.length === 1 || ( pathNameSplit[0] === "" && pathNameSplit.length === 2 )) ){
+			pathNameExt = pathNameSplit.pop()!.toLowerCase()
 		}
-		switch (ext) {
+		switch (pathNameExt) {
 			case "mp4":
-				const vt = (document.getElementById("templatevideo") as HTMLTemplateElement).content.cloneNode(true) as DocumentFragment
-				const v = vt.querySelector("video")! as HTMLVideoElement
+				const videoDocFragment = (document.getElementById("templatevideo") as HTMLTemplateElement).content.cloneNode(true) as DocumentFragment
+				const v = videoDocFragment.querySelector("video")! as HTMLVideoElement
 				v.setAttribute("src", path)
-
-				v.onplaying = (e)=>{
-					const el = e.target as HTMLVideoElement
-					if(el == currentVideo)
+				v.onplaying = () => {
+					if(v == currentVideo)
 						return
-					el.volume = volumeVideo;
-					el.muted = muteVideo;
+					v.volume = volumeVideo;
+					v.muted = muteVideo;
 					if (currentVideo) {
 						currentVideo.pause();
 					}
-					currentVideo = el;
+					currentVideo = v;
 				}
-				v.onvolumechange = (e) => {
-					const el = e.target as HTMLVideoElement
-					volumeVideo = el.volume;
-					muteVideo = el.muted;
+				v.onvolumechange = () => {
+					volumeVideo = v.volume;
+					muteVideo = v.muted;
 				}
-				const buttons = vt.querySelectorAll(".butspeed")
-				buttons.forEach(element => {
-					(element as HTMLButtonElement).onclick = () => {
-						const el = element as HTMLButtonElement
-						v.playbackRate = Number(el.innerText.split("x")[0])
+				const buttons = videoDocFragment.querySelectorAll(".butspeed") as NodeListOf<HTMLButtonElement>
+				buttons.forEach(button => {
+					button.onclick = () => {
+						v.playbackRate = Number(button.innerText.split("x")[0])
 					}
 				});
-				const videoname = vt.querySelector(".videoname") as HTMLParagraphElement
-				videoname.innerText = path.split("/").pop()!;
-				post.append(vt)
+				const videoname = videoDocFragment.querySelector(".videoname") as HTMLParagraphElement
+				videoname.innerText = pathName;
+				post.append(videoDocFragment)
 				break;
 			case "mp3":
-				const at = (document.getElementById("templateaudio") as HTMLTemplateElement).content.cloneNode(true) as DocumentFragment
-				const ha = at.querySelector("a")!
+				const audioDocFragment = (document.getElementById("templateaudio") as HTMLTemplateElement).content.cloneNode(true) as DocumentFragment
+				const ha = audioDocFragment.querySelector("a")!
 				ha.setAttribute("href", path)
 				ha.innerText = path.split("/").pop()!
-				at.querySelector("source")!.setAttribute("src", path)
-				
-				const a = at.querySelector("audio")!
-				a.onplaying = (e)=>{
-					const el = e.target as HTMLAudioElement
-					if(el == currentMusic)
+				audioDocFragment.querySelector("source")!.setAttribute("src", path)
+				const a = audioDocFragment.querySelector("audio")!
+				a.onplaying = () => {
+					if(a == currentMusic)
 						return
-					el.volume = volumeMusic;
-					el.muted = muteMusic;
+					a.volume = volumeMusic;
+					a.muted = muteMusic;
 					if(currentMusic) {
 						currentMusic.classList.remove("musicfix");
 						currentMusic.pause();
 					}
-					el.classList.add("musicfix");
-					currentMusic = el;
+					a.classList.add("musicfix");
+					currentMusic = a;
 				}
-				a.onvolumechange = (e)=>{
-					const el = e.target as HTMLAudioElement
-					volumeMusic = el.volume;
-					muteMusic = el.muted;
+				a.onvolumechange = () => {
+					volumeMusic = a.volume;
+					muteMusic = a.muted;
 				}
-				post.append(at)
+				post.append(audioDocFragment)
 				break;
 			case "jpg":
 			case "png":
@@ -107,14 +101,14 @@ window.onload = function () {
 				const o = (document.getElementById("templateother") as HTMLTemplateElement).content.cloneNode(true) as DocumentFragment
 				const ho = o.querySelector("a")!
 				ho.setAttribute("href", path) 
-				ho.innerText = path.split("/").pop()!
+				ho.innerText = pathName
 				post.append(o)
 				break;
 		}
 
 		let xhr = new XMLHttpRequest()
 		xhr.open('GET', path + "._msg", true)
-		xhr.setRequestHeader("Cache-Control", "no-cache")
+		xhr.setRequestHeader("Cache-Control", "no-store")
 		xhr.send()
 		xhr.onload = () => {
 			if(xhr.status==200){
@@ -125,27 +119,30 @@ window.onload = function () {
 
 		msginput.onkeydown = (event) => {
 			if(event.key == 'Enter') {
-				const el = event.target as HTMLInputElement
-				const p = el.parentElement as HTMLDivElement
-				if (el.value.length == 0) {
+				const p = msginput.parentElement as HTMLDivElement
+				if (msginput.value.length == 0) {
 					return
 				}
-				lastMsg = el.value//на будущее для вывода последних комментариев
+				lastMsg = msginput.value//на будущее для вывода последних комментариев
 				socket.send(JSON.stringify({
 					id: p.id,
-					txt: el.value
+					txt: msginput.value
 				}))
-				el.value = "";
+				msginput.value = "";
 			}
 		}
-		content.prepend(d)//делается в конце функции т.к. после выполнения данной команды содержимое d недоступно
+		contentBlock.prepend(d)//делается в конце функции т.к. после выполнения данной команды содержимое d недоступно
 	}
 
 	socketUpload.onmessage = appendToBody;
+	type msgStruct = {
+		id: string,
+		txt: string
+	};
 	socket.addEventListener("message", (e)=>{
-		const d = JSON.parse(e.data)
-		const com = document.getElementById(d.id)!.querySelector(".comments") as HTMLDivElement
-		com.innerText += d.txt + "\n"
+		const data = JSON.parse(e.data) as msgStruct
+		const com = document.getElementById(data.id)!.querySelector(".comments") as HTMLDivElement
+		com.innerText += data.txt + "\n"
 		com.scrollTo(0, com.scrollHeight)
 		//ring.play()
 	})
@@ -161,14 +158,14 @@ window.onload = function () {
 		// socket.send('Ураааааа!')
 	}
 
-	const over = document.querySelector(".over") as HTMLDivElement
+	const uploadingOverlay = document.querySelector(".over") as HTMLDivElement
 	document.addEventListener("dragenter", (e) => {
 		e.preventDefault();
-		over.classList.add("show")
+		uploadingOverlay.classList.add("show")
 	})
-	over.addEventListener("dragleave", (e) => {
+	uploadingOverlay.addEventListener("dragleave", (e) => {
 		e.preventDefault();
-		over.classList.remove("show")
+		uploadingOverlay.classList.remove("show")
 	})
 
 	document.addEventListener("dragover", (e) => {
@@ -179,24 +176,24 @@ window.onload = function () {
 	})
 	document.addEventListener("drop", (e) => {
 		e.preventDefault();
-		let fs = e.dataTransfer!.files;
-		for (let index = 0; index < fs.length; index++) {
-			const el = fs[index];
-			console.log('You selected ' + el.name);
-			console.log('File size: ' + el.size);
+		let files = e.dataTransfer!.files;
+		for (let index = 0; index < files.length; index++) {
+			const file = files[index];
+			console.log('You selected ' + file.name);
+			console.log('File size: ' + file.size);
 			let formData = new FormData();
-			formData.append("file", el);
+			formData.append("file", file);
 			let xhr = new XMLHttpRequest()
 			xhr.upload.onprogress = (e) => {
 				const ev = e as ProgressEvent
 				console.log("Upload progress: " + (ev.loaded/ev.total*100).toFixed(0) + "%")
-				over.innerText = "Upload progress: " + (ev.loaded/ev.total*100).toFixed(0) + "%"
+				uploadingOverlay.innerText = "Upload progress: " + (ev.loaded/ev.total*100).toFixed(0) + "%"
 			}
-			xhr.upload.onloadend = (e) => {
-				over.classList.remove("show")
-				over.innerText = "Drop it!"
+			xhr.upload.onloadend = () => {
+				uploadingOverlay.classList.remove("show")
+				uploadingOverlay.innerText = "Drop it!"
 			}
-			xhr.open('POST', "uploadxml/" + el.name, true)
+			xhr.open('POST', "/uploadxml/" + file.name, true)
 			xhr.send(formData);
 		}
 	})

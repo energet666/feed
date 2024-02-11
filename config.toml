@@ -1,2 +1,2 @@
-Port = "12349"
-ContentPath = "D:\\Content\\"
+Port = 12345
+ContentPath = "./www/upload"

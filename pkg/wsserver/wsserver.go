@@ -41,7 +41,7 @@ func (s *wsServer) HandleUploadws(ws *websocket.Conn) {
 		ext := filepath.Ext(f.Name())
 		ext = strings.ToLower(ext)
 		if ext != "._msg" {
-			ws.Write([]byte(`./upload/` + f.Name()))
+			ws.Write([]byte(`/upload/` + f.Name()))
 		}
 	}
 
@@ -88,7 +88,10 @@ func (s *wsServer) HandleWs(ws *websocket.Conn) {
 
 		var msgs Message
 		json.Unmarshal(msg, &msgs)
-		fo, _ := os.OpenFile(s.uploadPath+strings.Split(msgs.Id, "/upload/")[1]+"._msg", os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0644)
+		fo, _ := os.OpenFile(
+			filepath.Join(s.uploadPath, strings.TrimPrefix(msgs.Id, "/upload/")+"._msg"),
+			os.O_APPEND|os.O_WRONLY|os.O_CREATE,
+			0644)
 		fo.Write([]byte(msgs.Txt + "\n"))
 		fo.Close()
 		s.Broadcast(msg, "ws")
@@ -138,7 +141,7 @@ func (s *wsServer) HandleUploadxml(w http.ResponseWriter, r *http.Request) {
 
 	defer file.Close()
 
-	out, err := os.Create(s.uploadPath + header.Filename)
+	out, err := os.Create(filepath.Join(s.uploadPath, header.Filename))
 	if err != nil {
 		fmt.Printf("Unable to create the file for writing. Check your write access privilege")
 		return
@@ -152,18 +155,21 @@ func (s *wsServer) HandleUploadxml(w http.ResponseWriter, r *http.Request) {
 		fmt.Println(err)
 	}
 	fmt.Printf("%s %d Bytes saved\n", header.Filename, header.Size)
-	s.Broadcast([]byte(`./upload/`+header.Filename), "uploadws")
+	s.Broadcast([]byte(`/upload/`+header.Filename), "uploadws")
 }
 
 func (s *wsServer) HandleRoot(w http.ResponseWriter, r *http.Request) {
 	fmt.Println(r.RemoteAddr, r.Method, r.RequestURI)
-	w.Header().Set("Cache-Control", "no-cache")
+	w.Header().Set("Cache-Control", "no-store")
 	http.FileServer(http.Dir("www")).ServeHTTP(w, r)
 }
 
 func (s *wsServer) HandleUploadDir(w http.ResponseWriter, r *http.Request) {
 	fmt.Println(r.RemoteAddr, r.Method, r.URL.Path)
-	r.URL.Path = strings.Split(r.URL.Path, "/upload")[1]
+	r.URL.Path = strings.TrimPrefix(r.URL.Path, "/upload")
+	if strings.ToLower(filepath.Ext(r.URL.Path)) == "._msg" {
+		w.Header().Set("Cache-Control", "no-store")
+	}
 	http.FileServer(http.Dir(s.uploadPath)).ServeHTTP(w, r)
 }
 
