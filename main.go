@@ -23,7 +23,7 @@ func main() {
 		log.Println("ошибка чтения параметров:", err)
 		return
 	}
-	fmt.Printf("%+v", param)
+	fmt.Printf("%+v\n", param)
 	port := fmt.Sprint(param.Port)
 
 	s := wsserver.NewWsServer(param.ContentPath)

@@ -171,8 +171,9 @@ window.onload = function () {
             let xhr = new XMLHttpRequest();
             xhr.upload.onprogress = (e) => {
                 const ev = e;
-                console.log("Upload progress: " + (ev.loaded / ev.total * 100).toFixed(0) + "%");
-                uploadingOverlay.innerText = "Upload progress: " + (ev.loaded / ev.total * 100).toFixed(0) + "%";
+                const uploadProgress = (ev.loaded / ev.total * 100).toFixed(0);
+                console.log("Upload progress: " + uploadProgress + "%");
+                uploadingOverlay.innerText = "Upload progress: " + uploadProgress + "%";
             };
             xhr.upload.onloadend = () => {
                 uploadingOverlay.classList.remove("show");
