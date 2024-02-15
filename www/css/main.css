@@ -8,6 +8,26 @@ html {
 	font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 	font-size: 15px;
 }
+/* total width */
+html::-webkit-scrollbar {
+    background-color: #da56f2;
+    width: 8px;
+}
+/* background of the scrollbar except button or resizer */
+html::-webkit-scrollbar-track {
+    background-color: #00000000;
+}
+/* scrollbar itself */
+html::-webkit-scrollbar-thumb {
+    background-color: #d337ee;
+    border-radius: 8px;
+    /* border: 1px solid #ffffff73; */
+}
+/* set button(top and bottom of the scrollbar) */
+html::-webkit-scrollbar-button {
+    display:none;
+}
+
 .snappingOn{
 	scroll-snap-type: y mandatory;
 }
@@ -113,28 +133,27 @@ a {
 	-ms-user-select: text; /* IE10+/Edge */
 	user-select: text; /* Standard */
 }
+
 /* total width */
 .comments::-webkit-scrollbar {
     background-color: #00000000;
     width: 8px;
 }
-
 /* background of the scrollbar except button or resizer */
 .comments::-webkit-scrollbar-track {
     background-color: #00000000;
 }
-
 /* scrollbar itself */
 .comments::-webkit-scrollbar-thumb {
-    background-color: #babac0;
+    background-color: #63ccaf;
     border-radius: 8px;
     /* border: 1px solid #ffffff73; */
 }
-
 /* set button(top and bottom of the scrollbar) */
 .comments::-webkit-scrollbar-button {
     display:none;
 }
+
 .wrapper {
 	width: 100%;
 	position: relative;
