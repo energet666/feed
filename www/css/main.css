@@ -90,6 +90,7 @@ video, audio, img {
 a {
 	margin: 5px;
 	display: block;
+	font-weight: 500;
 }
 
 @media (max-width: 768px) {
@@ -255,4 +256,45 @@ a {
 	top: 0;
 	left: 0;
 	z-index: 10;
-  }
+}
+
+
+.mycheck {
+	display: block;
+    position: fixed;
+    left: 28px;
+    top: 17px;
+}
+.mycheck::before {
+	display: block;
+    content: " ";
+    width: 50px;
+    height: 28px;
+    position: absolute;
+    top: -7px;
+    left: -17px;
+    background-color: rgb(238 25 60);
+    border-radius: 100px;
+    border: solid white 3px;
+    box-sizing: border-box;
+    box-shadow: inset black 0 0 5px 0px;
+    transition: all 0.5s;
+}
+.mycheck::after {
+    display: block;
+    content: " ";
+    width: 20px;
+    height: 20px;
+    position: absolute;
+    top: -3px;
+    left: -13px;
+    background-color: #ffffff;
+    border-radius: 100px;
+    transition: all 0.5s;
+}
+.mycheck:checked::after {
+	left: 9px;
+}
+.mycheck:checked::before {
+	background-color: rgb(143, 207, 47);
+}

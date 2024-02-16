@@ -4,10 +4,10 @@ window.onload = function () {
 	test("hi from module")
 	const ip = window.location.host
 	let currentVideo:HTMLVideoElement|null = null
-	let volumeVideo = 1
+	let volumeVideo = 0.25
 	let muteVideo = false
 	let currentMusic:HTMLAudioElement|null = null
-	let volumeMusic = 1
+	let volumeMusic = 0.25
 	let muteMusic = false
 	let lastMsg = ""
 	let ring = new Audio("./upload/Iphone - Message Tone.mp3")
@@ -205,6 +205,15 @@ window.onload = function () {
 	document.addEventListener("scroll", snappingOn)//при начальной загрузке карточек из-за снаппинга лента сама скролится вниз,
 													//поэтому включаю снаппинг когда скролит юзер
 
+	const snapOff = document.getElementById("snap_off") as HTMLInputElement
+	snapOff.checked = true
+	snapOff!.onchange = () => {
+		if (snapOff.checked) {
+			document.documentElement.classList.add("snappingOn")
+		} else{
+			document.documentElement.classList.remove("snappingOn")
+		}
+	}
     // let q = document.createElement("div")
     // q.id = "point"
     // q.classList.add("rect")
