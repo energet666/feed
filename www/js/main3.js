@@ -36,6 +36,7 @@ window.onload = function () {
                 const videoDocFragment = document.getElementById("templatevideo").content.cloneNode(true);
                 const v = videoDocFragment.querySelector("video");
                 v.setAttribute("src", path);
+                v.volume = volumeVideo;
                 v.onplaying = () => {
                     if (v == currentVideo)
                         return;
@@ -67,6 +68,7 @@ window.onload = function () {
                 ha.innerText = path.split("/").pop();
                 audioDocFragment.querySelector("source").setAttribute("src", path);
                 const a = audioDocFragment.querySelector("audio");
+                a.volume = volumeMusic;
                 a.onplaying = () => {
                     if (a == currentMusic)
                         return;
