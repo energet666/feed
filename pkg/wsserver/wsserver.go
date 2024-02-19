@@ -176,10 +176,6 @@ func (s *wsServer) HandleUploadDir(w http.ResponseWriter, r *http.Request) {
 func (s *wsServer) Broadcast(b []byte, t string) {
 	for ws, tt := range s.conns {
 		if tt == t {
-			// go func(wst *websocket.Conn) {
-			// 	wst.Write(b)
-			// }(ws)
-			ws := ws //без этого не захватывается переменная в замыкании
 			go func() {
 				ws.Write(b)
 			}()
