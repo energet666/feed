@@ -3,3 +3,4 @@ www/upload/
 .DS_Store
 feed
 feed.exe
+config.toml
