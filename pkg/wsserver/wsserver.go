@@ -166,7 +166,7 @@ func (s *wsServer) HandleRoot(w http.ResponseWriter, r *http.Request) {
 
 func (s *wsServer) HandleUploadDir(w http.ResponseWriter, r *http.Request) {
 	fmt.Println(r.RemoteAddr, r.Method, r.URL.Path)
-	r.URL.Path = strings.TrimPrefix(r.URL.Path, "/upload")
+	r.URL.Path = r.PathValue("path")
 	if strings.ToLower(filepath.Ext(r.URL.Path)) == "._msg" {
 		w.Header().Set("Cache-Control", "no-store")
 	}

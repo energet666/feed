@@ -29,7 +29,7 @@ func main() {
 	s := wsserver.NewWsServer(param.ContentPath)
 
 	http.Handle("/", http.HandlerFunc(s.HandleRoot))
-	http.Handle("/upload/", http.HandlerFunc(s.HandleUploadDir))
+	http.Handle("/upload/{path...}", http.HandlerFunc(s.HandleUploadDir))
 	http.Handle("/uploadxml/", http.HandlerFunc(s.HandleUploadxml))
 
 	http.Handle("/ws", websocket.Handler(s.HandleWs))
@@ -58,11 +58,6 @@ type parameters struct {
 }
 
 func readParametersFromToml(tomlFileName string, dataStruct *parameters) error {
-	// optsData, err := os.ReadFile(tomlFileName)
-	// if err != nil {
-	// 	return fmt.Errorf("ошибка открытия файла конфигурации: %s", err)
-	// }
-	// _, err = toml.Decode(string(optsData), &dataStruct)
 	_, err := toml.DecodeFile(tomlFileName, &dataStruct)
 	if err != nil {
 		if os.IsNotExist(err) {
