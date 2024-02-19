@@ -295,9 +295,11 @@ a {
     background-color: #ffffff;
     border-radius: 100px;
 	transition: all ease-in 0.5s 0.1s;
+	box-shadow: inset black 3px -3px 5px -2px;
 }
 .mycheck:checked::after {
 	left: 26px;
+	box-shadow: inset black -3px -3px 5px -2px;
 }
 .mycheck:checked{
 	animation: myCheckOnBefore 0.9s ease-out;

@@ -208,7 +208,6 @@ window.onload = function () {
 													//поэтому включаю снаппинг когда скролит юзер
 
 	const snapOff = document.getElementById("snap_off") as HTMLInputElement
-	snapOff.checked = true
 	snapOff!.onchange = () => {
 		if (snapOff.checked) {
 			document.documentElement.classList.add("snappingOn")

@@ -192,7 +192,6 @@ window.onload = function () {
     document.addEventListener("scroll", snappingOn); //при начальной загрузке карточек из-за снаппинга лента сама скролится вниз,
     //поэтому включаю снаппинг когда скролит юзер
     const snapOff = document.getElementById("snap_off");
-    snapOff.checked = true;
     snapOff.onchange = () => {
         if (snapOff.checked) {
             document.documentElement.classList.add("snappingOn");
