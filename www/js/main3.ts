@@ -1,6 +1,6 @@
 import {test} from './functions.js'
 
-window.onload = function () {
+window.onload = () => {
 	test("hi from module")
 	const ip = window.location.host
 	let currentVideo:HTMLVideoElement|null = null
@@ -121,13 +121,12 @@ window.onload = function () {
 
 		msginput.onkeydown = (event) => {
 			if(event.key == 'Enter') {
-				const p = msginput.parentElement as HTMLDivElement
 				if (msginput.value.length == 0) {
 					return
 				}
 				lastMsg = msginput.value//на будущее для вывода последних комментариев
 				socket.send(JSON.stringify({
-					id: p.id,
+					id: wrapper.id,
 					txt: msginput.value
 				}))
 				msginput.value = "";
@@ -215,6 +214,9 @@ window.onload = function () {
 			document.documentElement.classList.remove("snappingOn")
 		}
 	}
+	document.addEventListener("scroll", () => {
+		console.log(`${document.documentElement.scrollTop}/${document.documentElement.offsetHeight - window.innerHeight}`)
+	})
     // let q = document.createElement("div")
     // q.id = "point"
     // q.classList.add("rect")

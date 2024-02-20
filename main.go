@@ -26,7 +26,11 @@ func main() {
 	fmt.Printf("%+v\n", param)
 	port := fmt.Sprint(param.Port)
 
-	s := wsserver.NewWsServer(param.ContentPath)
+	s, err := wsserver.NewWsServer(param.ContentPath)
+	if err != nil {
+		log.Println("ошибка создания сервера:", err)
+		return
+	}
 
 	http.Handle("/", http.HandlerFunc(s.HandleRoot))
 	http.Handle("/upload/{path...}", http.HandlerFunc(s.HandleUploadDir))

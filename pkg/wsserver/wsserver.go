@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -14,15 +15,47 @@ import (
 )
 
 type wsServer struct {
-	conns      map[*websocket.Conn]string
-	uploadPath string
+	conns             map[*websocket.Conn]string
+	contentPath       string
+	contentPathUpload string
+	contentPathMsg    string
 }
 
-func NewWsServer(uploadPath string) *wsServer {
-	return &wsServer{
-		conns:      make(map[*websocket.Conn]string),
-		uploadPath: uploadPath,
+func NewWsServer(contentPath string) (*wsServer, error) {
+	up := filepath.Join(contentPath, "/upload")
+	ms := filepath.Join(contentPath, "/msg")
+	_, err := os.Stat(up)
+	if err != nil {
+		if os.IsNotExist(err) {
+			log.Printf("Директория %s не найдена", up)
+			err := os.Mkdir(up, 0644)
+			if err != nil {
+				return nil, fmt.Errorf("не удалось создать директорию %s: %s", up, err)
+			}
+			log.Printf("Директория %s создана", up)
+		} else {
+			return nil, fmt.Errorf("что-то не так с директорией %s: %s", up, err)
+		}
 	}
+	_, err = os.Stat(ms)
+	if err != nil {
+		if os.IsNotExist(err) {
+			log.Printf("Директория %s не найдена", ms)
+			err := os.Mkdir(ms, 0644)
+			if err != nil {
+				return nil, fmt.Errorf("не удалось создать директорию %s: %s", ms, err)
+			}
+			log.Printf("Директория %s создана", ms)
+		} else {
+			return nil, fmt.Errorf("что-то не так с директорией %s: %s", ms, err)
+		}
+	}
+	return &wsServer{
+		conns:             make(map[*websocket.Conn]string),
+		contentPath:       contentPath,
+		contentPathUpload: up,
+		contentPathMsg:    ms,
+	}, nil
 }
 
 func (s *wsServer) HandleUploadws(ws *websocket.Conn) {
@@ -31,18 +64,14 @@ func (s *wsServer) HandleUploadws(ws *websocket.Conn) {
 	fmt.Println(`new incoming "uploadws" connection from client:`, ws.Request().RemoteAddr)
 	fmt.Println("WS list: ", s.conns)
 
-	files, _ := os.ReadDir(s.uploadPath)
+	files, _ := os.ReadDir(s.contentPathUpload)
 	sort.Slice(files, func(i, j int) bool {
 		finfoi, _ := files[i].Info()
 		finfoj, _ := files[j].Info()
 		return finfoi.ModTime().Before(finfoj.ModTime())
 	})
 	for _, f := range files {
-		ext := filepath.Ext(f.Name())
-		ext = strings.ToLower(ext)
-		if ext != "._msg" {
-			ws.Write([]byte(`/upload/` + f.Name()))
-		}
+		ws.Write([]byte(`/upload/` + f.Name()))
 	}
 
 	for {
@@ -88,10 +117,13 @@ func (s *wsServer) HandleWs(ws *websocket.Conn) {
 
 		var msgs Message
 		json.Unmarshal(msg, &msgs)
-		fo, _ := os.OpenFile(
-			filepath.Join(s.uploadPath, strings.TrimPrefix(msgs.Id, "/upload/")+"._msg"),
+		fo, err := os.OpenFile(
+			filepath.Join(s.contentPathMsg, strings.TrimPrefix(msgs.Id, "/upload/")+"._msg"),
 			os.O_APPEND|os.O_WRONLY|os.O_CREATE,
 			0644)
+		if err != nil {
+			log.Println(err)
+		}
 		fo.Write([]byte(msgs.Txt + "\n"))
 		fo.Close()
 		s.Broadcast(msg, "ws")
@@ -141,7 +173,7 @@ func (s *wsServer) HandleUploadxml(w http.ResponseWriter, r *http.Request) {
 
 	defer file.Close()
 
-	out, err := os.Create(filepath.Join(s.uploadPath, header.Filename))
+	out, err := os.Create(filepath.Join(s.contentPathUpload, header.Filename))
 	if err != nil {
 		fmt.Printf("Unable to create the file for writing. Check your write access privilege")
 		return
@@ -169,8 +201,10 @@ func (s *wsServer) HandleUploadDir(w http.ResponseWriter, r *http.Request) {
 	r.URL.Path = r.PathValue("path")
 	if strings.ToLower(filepath.Ext(r.URL.Path)) == "._msg" {
 		w.Header().Set("Cache-Control", "no-store")
+		http.FileServer(http.Dir(s.contentPathMsg)).ServeHTTP(w, r)
+	} else {
+		http.FileServer(http.Dir(s.contentPathUpload)).ServeHTTP(w, r)
 	}
-	http.FileServer(http.Dir(s.uploadPath)).ServeHTTP(w, r)
 }
 
 func (s *wsServer) Broadcast(b []byte, t string) {
