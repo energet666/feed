@@ -20,12 +20,18 @@ window.onload = () => {
     const socketEvent = new WebSocket("ws://" + ip + "/eventws");
 
 	function appendToBody(event: MessageEvent) {
+		type comandStruct = {
+			Cmd: string,
+			Arg: string
+		};
+		const data = JSON.parse(event.data) as comandStruct
+
 		const d = cardTemplate.content.cloneNode(true) as DocumentFragment
 		const post = d.querySelector(".post") as HTMLDivElement
 		const comments = d.querySelector(".comments") as HTMLDivElement
 		const msginput = d.querySelector(".msginput") as HTMLInputElement
 		const wrapper = d.querySelector(".wrapper") as HTMLDivElement
-		const path = event.data as string
+		const path = data.Arg as string
 		const pathName = path.split("/").pop()!
 
 		wrapper.id = path
@@ -132,7 +138,20 @@ window.onload = () => {
 				msginput.value = "";
 			}
 		}
-		contentBlock.prepend(d)//делается в конце функции т.к. после выполнения данной команды содержимое d недоступно
+		switch (data.Cmd) {
+			case "append":
+				contentBlock.append(d)//делается в конце функции т.к. после выполнения данной команды содержимое d недоступно
+				break;
+			case "prepend":
+				contentBlock.prepend(d)//делается в конце функции т.к. после выполнения данной команды содержимое d недоступно
+				break;
+			default:
+				break;
+		}
+		
+		if (document.documentElement.offsetHeight - window.innerHeight - document.documentElement.scrollTop < window.innerHeight) {
+			socketUpload.send("old")
+		}
 	}
 
 	socketUpload.onmessage = appendToBody;
@@ -142,10 +161,13 @@ window.onload = () => {
 	};
 	socket.addEventListener("message", (e)=>{
 		const data = JSON.parse(e.data) as msgStruct
-		const com = document.getElementById(data.id)!.querySelector(".comments") as HTMLDivElement
-		com.innerText += data.txt + "\n"
-		com.scrollTo(0, com.scrollHeight)
-		//ring.play()
+		const target = document.getElementById(data.id)
+		if(target){
+			const com = target.querySelector(".comments") as HTMLDivElement
+			com.innerText += data.txt + "\n"
+			com.scrollTo(0, com.scrollHeight)
+			//ring.play()
+		}
 	})
 
 	socket.onclose = () => {
@@ -199,23 +221,28 @@ window.onload = () => {
 			xhr.send(formData);
 		}
 	})
-	function snappingOn() {
-		document.documentElement.classList.add("snappingOn")
-		document.removeEventListener("scroll", snappingOn)
-	}
-	document.addEventListener("scroll", snappingOn)//при начальной загрузке карточек из-за снаппинга лента сама скролится вниз,
-													//поэтому включаю снаппинг когда скролит юзер
+	// function snappingOn() {
+	// 	document.documentElement.classList.add("snappingOn")
+	// 	document.removeEventListener("scroll", snappingOn)
+	// }
+	// document.addEventListener("scroll", snappingOn)//при начальной загрузке карточек из-за снаппинга лента сама скролится вниз,
+	// 												//поэтому включаю снаппинг когда скролит юзер
 
 	const snapOff = document.getElementById("snap_off") as HTMLInputElement
+	snapOff.checked = false
 	snapOff!.onchange = () => {
 		if (snapOff.checked) {
 			document.documentElement.classList.add("snappingOn")
 		} else{
 			document.documentElement.classList.remove("snappingOn")
+			// document.removeEventListener("scroll", snappingOn)
 		}
 	}
 	document.addEventListener("scroll", () => {
-		console.log(`${document.documentElement.scrollTop}/${document.documentElement.offsetHeight - window.innerHeight}`)
+		// console.log(`${document.documentElement.scrollTop}/${document.documentElement.offsetHeight - window.innerHeight}`)
+		if (document.documentElement.offsetHeight - window.innerHeight - document.documentElement.scrollTop < window.innerHeight) {
+			socketUpload.send("old")
+		}
 	})
     // let q = document.createElement("div")
     // q.id = "point"

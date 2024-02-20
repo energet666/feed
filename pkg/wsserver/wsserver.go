@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"io/fs"
 	"log"
 	"net/http"
 	"os"
@@ -16,9 +17,11 @@ import (
 
 type wsServer struct {
 	conns             map[*websocket.Conn]string
+	connsUpload       map[*websocket.Conn]uint64
 	contentPath       string
 	contentPathUpload string
 	contentPathMsg    string
+	files             []fs.DirEntry
 }
 
 func NewWsServer(contentPath string) (*wsServer, error) {
@@ -50,29 +53,40 @@ func NewWsServer(contentPath string) (*wsServer, error) {
 			return nil, fmt.Errorf("что-то не так с директорией %s: %s", ms, err)
 		}
 	}
-	return &wsServer{
-		conns:             make(map[*websocket.Conn]string),
-		contentPath:       contentPath,
-		contentPathUpload: up,
-		contentPathMsg:    ms,
-	}, nil
-}
-
-func (s *wsServer) HandleUploadws(ws *websocket.Conn) {
-	s.conns[ws] = "uploadws"
-	buf := make([]byte, 1024)
-	fmt.Println(`new incoming "uploadws" connection from client:`, ws.Request().RemoteAddr)
-	fmt.Println("WS list: ", s.conns)
-
-	files, _ := os.ReadDir(s.contentPathUpload)
+	files, _ := os.ReadDir(up)
 	sort.Slice(files, func(i, j int) bool {
 		finfoi, _ := files[i].Info()
 		finfoj, _ := files[j].Info()
 		return finfoi.ModTime().Before(finfoj.ModTime())
 	})
-	for _, f := range files {
-		ws.Write([]byte(`/upload/` + f.Name()))
-	}
+	return &wsServer{
+		conns:             make(map[*websocket.Conn]string),
+		connsUpload:       make(map[*websocket.Conn]uint64),
+		contentPath:       contentPath,
+		contentPathUpload: up,
+		contentPathMsg:    ms,
+		files:             files,
+	}, nil
+}
+
+type comand struct {
+	Cmd string
+	Arg string
+}
+
+func (s *wsServer) HandleUploadws(ws *websocket.Conn) {
+	s.conns[ws] = "uploadws"
+	s.connsUpload[ws] = uint64(len(s.files) - 1) //самый свежий файл
+	buf := make([]byte, 1024)
+	fmt.Println(`new incoming "uploadws" connection from client:`, ws.Request().RemoteAddr)
+	fmt.Println("WS list: ", s.conns)
+
+	// ws.Write([]byte(`/upload/` + s.files[s.connsUpload[ws]].Name()))
+	comandJSON, _ := json.Marshal(comand{
+		Cmd: "append",
+		Arg: `/upload/` + s.files[s.connsUpload[ws]].Name(),
+	})
+	ws.Write(comandJSON)
 
 	for {
 		n, err := ws.Read(buf)
@@ -80,6 +94,7 @@ func (s *wsServer) HandleUploadws(ws *websocket.Conn) {
 			if err == io.EOF {
 				fmt.Println("connection closed: ", ws.Request().RemoteAddr)
 				delete(s.conns, ws)
+				delete(s.connsUpload, ws)
 				fmt.Println("WS list: ", s.conns)
 				break
 			}
@@ -88,6 +103,23 @@ func (s *wsServer) HandleUploadws(ws *websocket.Conn) {
 		}
 		msg := buf[:n]
 		fmt.Println("Recived from uploadws: " + string(msg))
+		switch string(msg) {
+		case "old":
+			if s.connsUpload[ws] != 0 {
+				s.connsUpload[ws] -= 1
+				// ws.Write([]byte(`/upload/` + s.files[s.connsUpload[ws]].Name()))
+				comandJSON, _ := json.Marshal(comand{
+					Cmd: "append",
+					Arg: `/upload/` + s.files[s.connsUpload[ws]].Name(),
+				})
+				ws.Write(comandJSON)
+			}
+			// case "new":
+			// 	if s.connsUpload[ws] != uint64(len(s.files)-1) {
+			// 		s.connsUpload[ws] += 1
+			// 		ws.Write([]byte(`/upload/` + s.files[s.connsUpload[ws]].Name()))
+			// 	}
+		}
 	}
 }
 
@@ -184,10 +216,17 @@ func (s *wsServer) HandleUploadxml(w http.ResponseWriter, r *http.Request) {
 	// write the content from POST to the file
 	_, err = io.Copy(out, file)
 	if err != nil {
-		fmt.Println(err)
+		log.Println(err)
 	}
+	outInfo, _ := out.Stat()
+	s.files = append(s.files, fs.FileInfoToDirEntry(outInfo))
 	fmt.Printf("%s %d Bytes saved\n", header.Filename, header.Size)
-	s.Broadcast([]byte(`/upload/`+header.Filename), "uploadws")
+	// s.Broadcast([]byte(`/upload/`+header.Filename), "uploadws")
+	comandJSON, _ := json.Marshal(comand{
+		Cmd: "prepend",
+		Arg: `/upload/` + header.Filename,
+	})
+	s.Broadcast(comandJSON, "uploadws")
 }
 
 func (s *wsServer) HandleRoot(w http.ResponseWriter, r *http.Request) {
@@ -197,7 +236,7 @@ func (s *wsServer) HandleRoot(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *wsServer) HandleUploadDir(w http.ResponseWriter, r *http.Request) {
-	fmt.Println(r.RemoteAddr, r.Method, r.URL.Path)
+	log.Println(r.RemoteAddr, r.Method, r.URL.Path)
 	r.URL.Path = r.PathValue("path")
 	if strings.ToLower(filepath.Ext(r.URL.Path)) == "._msg" {
 		w.Header().Set("Cache-Control", "no-store")

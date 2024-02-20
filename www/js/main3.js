@@ -16,12 +16,13 @@ window.onload = () => {
     const socketUpload = new WebSocket("ws://" + ip + "/uploadws");
     const socketEvent = new WebSocket("ws://" + ip + "/eventws");
     function appendToBody(event) {
+        const data = JSON.parse(event.data);
         const d = cardTemplate.content.cloneNode(true);
         const post = d.querySelector(".post");
         const comments = d.querySelector(".comments");
         const msginput = d.querySelector(".msginput");
         const wrapper = d.querySelector(".wrapper");
-        const path = event.data;
+        const path = data.Arg;
         const pathName = path.split("/").pop();
         wrapper.id = path;
         let pathNameSplit = pathName.split(".");
@@ -125,15 +126,30 @@ window.onload = () => {
                 msginput.value = "";
             }
         };
-        contentBlock.prepend(d); //делается в конце функции т.к. после выполнения данной команды содержимое d недоступно
+        switch (data.Cmd) {
+            case "append":
+                contentBlock.append(d); //делается в конце функции т.к. после выполнения данной команды содержимое d недоступно
+                break;
+            case "prepend":
+                contentBlock.prepend(d); //делается в конце функции т.к. после выполнения данной команды содержимое d недоступно
+                break;
+            default:
+                break;
+        }
+        if (document.documentElement.offsetHeight - window.innerHeight - document.documentElement.scrollTop < window.innerHeight) {
+            socketUpload.send("old");
+        }
     }
     socketUpload.onmessage = appendToBody;
     socket.addEventListener("message", (e) => {
         const data = JSON.parse(e.data);
-        const com = document.getElementById(data.id).querySelector(".comments");
-        com.innerText += data.txt + "\n";
-        com.scrollTo(0, com.scrollHeight);
-        //ring.play()
+        const target = document.getElementById(data.id);
+        if (target) {
+            const com = target.querySelector(".comments");
+            com.innerText += data.txt + "\n";
+            com.scrollTo(0, com.scrollHeight);
+            //ring.play()
+        }
     });
     socket.onclose = () => {
         console.log('Service', "WebSocket Disconnected");
@@ -184,23 +200,28 @@ window.onload = () => {
             xhr.send(formData);
         }
     });
-    function snappingOn() {
-        document.documentElement.classList.add("snappingOn");
-        document.removeEventListener("scroll", snappingOn);
-    }
-    document.addEventListener("scroll", snappingOn); //при начальной загрузке карточек из-за снаппинга лента сама скролится вниз,
-    //поэтому включаю снаппинг когда скролит юзер
+    // function snappingOn() {
+    // 	document.documentElement.classList.add("snappingOn")
+    // 	document.removeEventListener("scroll", snappingOn)
+    // }
+    // document.addEventListener("scroll", snappingOn)//при начальной загрузке карточек из-за снаппинга лента сама скролится вниз,
+    // 												//поэтому включаю снаппинг когда скролит юзер
     const snapOff = document.getElementById("snap_off");
+    snapOff.checked = false;
     snapOff.onchange = () => {
         if (snapOff.checked) {
             document.documentElement.classList.add("snappingOn");
         }
         else {
             document.documentElement.classList.remove("snappingOn");
+            // document.removeEventListener("scroll", snappingOn)
         }
     };
     document.addEventListener("scroll", () => {
-        console.log(`${document.documentElement.scrollTop}/${document.documentElement.offsetHeight - window.innerHeight}`);
+        // console.log(`${document.documentElement.scrollTop}/${document.documentElement.offsetHeight - window.innerHeight}`)
+        if (document.documentElement.offsetHeight - window.innerHeight - document.documentElement.scrollTop < window.innerHeight) {
+            socketUpload.send("old");
+        }
     });
     // let q = document.createElement("div")
     // q.id = "point"
