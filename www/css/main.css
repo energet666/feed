@@ -195,8 +195,9 @@ a {
 	box-shadow: #000000 0 0 5px 0px;
 	cursor: pointer;
 }
-.butspeed:active {
-	box-shadow: none;
+.butspeedactive {
+	background-color: #3eca94;
+	color: white;
 }
 .butspeed:hover{
 	box-shadow: #000000 0 0 7px 0px;

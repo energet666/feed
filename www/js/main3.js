@@ -54,8 +54,17 @@ window.onload = () => {
                 };
                 const buttons = videoDocFragment.querySelectorAll(".butspeed");
                 buttons.forEach(button => {
+                    if (button.innerText == "1.0x") {
+                        button.classList.add("butspeedactive");
+                    }
                     button.onclick = () => {
                         v.playbackRate = Number(button.innerText.split("x")[0]);
+                        button.classList.add("butspeedactive");
+                        buttons.forEach(btn => {
+                            if (btn != button) {
+                                btn.classList.remove("butspeedactive");
+                            }
+                        });
                     };
                 });
                 const videoname = videoDocFragment.querySelector(".videoname");
