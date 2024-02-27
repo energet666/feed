@@ -11,6 +11,7 @@ import (
 	"runtime"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/BurntSushi/toml"
 	"golang.org/x/net/websocket"
@@ -32,18 +33,30 @@ func main() {
 		return
 	}
 
-	http.Handle("/", http.HandlerFunc(s.HandleRoot))
-	http.Handle("/upload/{path...}", http.HandlerFunc(s.HandleUploadDir))
-	http.Handle("/uploadxml/", http.HandlerFunc(s.HandleUploadxml))
+	myMux := http.NewServeMux()
 
-	http.Handle("/ws", websocket.Handler(s.HandleWs))
-	http.Handle("/uploadws", websocket.Handler(s.HandleUploadws))
-	http.Handle("/eventws", websocket.Handler(s.HandleEventws))
+	myMux.Handle("/", http.HandlerFunc(s.HandleRoot))
+	myMux.Handle("/upload/{path...}", http.HandlerFunc(s.HandleUploadDir))
+	myMux.Handle("/uploadxml/", http.HandlerFunc(s.HandleUploadxml))
+
+	myMux.Handle("/ws", websocket.Handler(s.HandleWs))
+	myMux.Handle("/uploadws", websocket.Handler(s.HandleUploadws))
+	myMux.Handle("/eventws", websocket.Handler(s.HandleEventws))
+
+	httpServ := &http.Server{
+		Addr:           ":" + port,
+		Handler:        myMux,
+		ReadTimeout:    10 * time.Second,
+		WriteTimeout:   10 * time.Second,
+		MaxHeaderBytes: 1 << 20,
+	}
 
 	wg := sync.WaitGroup{}
 	wg.Add(1)
 	go func() {
-		http.ListenAndServe(":"+port, nil)
+		if err := httpServ.ListenAndServe(); err != nil {
+			log.Fatal(err)
+		}
 		wg.Done()
 	}()
 
