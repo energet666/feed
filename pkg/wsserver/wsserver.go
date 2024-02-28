@@ -11,13 +11,15 @@ import (
 	"path/filepath"
 	"sort"
 	"strings"
+	"sync"
+	"time"
 
 	"golang.org/x/net/websocket"
 )
 
 type wsServer struct {
-	conns             map[*websocket.Conn]string
-	connsUpload       map[*websocket.Conn]uint64
+	conns             *sync.Map
+	connsUpload       *sync.Map
 	contentPath       string
 	contentPathUpload string
 	contentPathMsg    string
@@ -27,6 +29,8 @@ type wsServer struct {
 func NewWsServer(contentPath string) (*wsServer, error) {
 	up := filepath.Join(contentPath, "/upload")
 	ms := filepath.Join(contentPath, "/msg")
+	var conns sync.Map
+	var connsUpload sync.Map
 	_, err := os.Stat(up)
 	if err != nil {
 		if os.IsNotExist(err) {
@@ -60,8 +64,8 @@ func NewWsServer(contentPath string) (*wsServer, error) {
 		return finfoi.ModTime().Before(finfoj.ModTime())
 	})
 	return &wsServer{
-		conns:             make(map[*websocket.Conn]string),
-		connsUpload:       make(map[*websocket.Conn]uint64),
+		conns:             &conns,
+		connsUpload:       &connsUpload,
 		contentPath:       contentPath,
 		contentPathUpload: up,
 		contentPathMsg:    ms,
@@ -75,16 +79,17 @@ type comand struct {
 }
 
 func (s *wsServer) HandleUploadws(ws *websocket.Conn) {
-	s.conns[ws] = "uploadws"
-	s.connsUpload[ws] = uint64(len(s.files) - 1) //самый свежий файл
+	s.conns.Store(ws, "uploadws")
+	s.connsUpload.Store(ws, int(len(s.files)-1)) //самый свежий файл
 	buf := make([]byte, 1024)
 	fmt.Println(`new incoming "uploadws" connection from client:`, ws.Request().RemoteAddr)
 	fmt.Println("WS list: ", s.conns)
 
 	// ws.Write([]byte(`/upload/` + s.files[s.connsUpload[ws]].Name()))
+	fnum, _ := s.connsUpload.Load(ws)
 	comandJSON, _ := json.Marshal(comand{
 		Cmd: "append",
-		Arg: `/upload/` + s.files[s.connsUpload[ws]].Name(),
+		Arg: `/upload/` + s.files[fnum.(int)].Name(),
 	})
 	ws.Write(comandJSON)
 
@@ -93,8 +98,8 @@ func (s *wsServer) HandleUploadws(ws *websocket.Conn) {
 		if err != nil {
 			if err == io.EOF {
 				fmt.Println("connection closed: ", ws.Request().RemoteAddr)
-				delete(s.conns, ws)
-				delete(s.connsUpload, ws)
+				s.conns.Delete(ws)
+				s.connsUpload.Delete(ws)
 				fmt.Println("WS list: ", s.conns)
 				break
 			}
@@ -105,12 +110,13 @@ func (s *wsServer) HandleUploadws(ws *websocket.Conn) {
 		fmt.Println("Recived from uploadws: " + string(msg))
 		switch string(msg) {
 		case "old":
-			if s.connsUpload[ws] != 0 {
-				s.connsUpload[ws] -= 1
+			if n, _ := s.connsUpload.Load(ws); n.(int) != 0 {
+				s.connsUpload.Store(ws, n.(int)-1)
 				// ws.Write([]byte(`/upload/` + s.files[s.connsUpload[ws]].Name()))
+				nfile, _ := s.connsUpload.Load(ws)
 				comandJSON, _ := json.Marshal(comand{
 					Cmd: "append",
-					Arg: `/upload/` + s.files[s.connsUpload[ws]].Name(),
+					Arg: `/upload/` + s.files[nfile.(int)].Name(),
 				})
 				ws.Write(comandJSON)
 			}
@@ -129,7 +135,7 @@ type Message struct {
 }
 
 func (s *wsServer) HandleWs(ws *websocket.Conn) {
-	s.conns[ws] = "ws"
+	s.conns.Store(ws, "ws")
 	buf := make([]byte, 1024)
 	fmt.Println(`New incoming "ws" connection from client:`, ws.Request().RemoteAddr)
 	fmt.Println("WS list: ", s.conns)
@@ -138,7 +144,7 @@ func (s *wsServer) HandleWs(ws *websocket.Conn) {
 		if err != nil {
 			if err == io.EOF {
 				fmt.Println("Connection closed: ", ws.Request().RemoteAddr)
-				delete(s.conns, ws)
+				s.conns.Delete(ws)
 				fmt.Println("WS list: ", s.conns)
 				break
 			}
@@ -168,7 +174,7 @@ type MouseXY struct {
 }
 
 func (s *wsServer) HandleEventws(ws *websocket.Conn) {
-	s.conns[ws] = "eventws"
+	s.conns.Store(ws, "eventws")
 	buf := make([]byte, 1024)
 	fmt.Println(`New incoming "eventws" connection from client:`, ws.Request().RemoteAddr)
 	fmt.Println("WS list: ", s.conns)
@@ -177,7 +183,7 @@ func (s *wsServer) HandleEventws(ws *websocket.Conn) {
 		if err != nil {
 			if err == io.EOF {
 				fmt.Println("Connection closed: ", ws.Request().RemoteAddr)
-				delete(s.conns, ws)
+				s.conns.Delete(ws)
 				fmt.Println("WS list: ", s.conns)
 				break
 			}
@@ -185,13 +191,12 @@ func (s *wsServer) HandleEventws(ws *websocket.Conn) {
 			continue
 		}
 		msg := buf[:n]
-
-		var mxy MouseXY
-		json.Unmarshal(msg, &mxy)
-		fmt.Println(string(msg))
-		fmt.Println(mxy.X, mxy.Y)
-
-		ws.Write([]byte(msg))
+		log.Println(string(msg))
+		// var mxy MouseXY
+		// json.Unmarshal(msg, &mxy)
+		// fmt.Println(string(msg))
+		// fmt.Println(mxy.X, mxy.Y)
+		ws.Write([]byte(time.Now().Format(time.TimeOnly) + " Я ещё жив!"))
 	}
 }
 
@@ -247,11 +252,12 @@ func (s *wsServer) HandleUploadDir(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *wsServer) Broadcast(b []byte, t string) {
-	for ws, tt := range s.conns {
-		if tt == t {
+	s.conns.Range(func(ws, tt any) bool {
+		if tt.(string) == t {
 			go func() {
-				ws.Write(b)
+				ws.(*websocket.Conn).Write(b)
 			}()
 		}
-	}
+		return true
+	})
 }
