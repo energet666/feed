@@ -232,6 +232,12 @@ window.onload = () => {
             socketUpload.send("old");
         }
     });
+    let liveChecker = setInterval(() => {
+        socketEvent.send("Ты живой?");
+    }, 1000);
+    socketEvent.onmessage = (e) => {
+        console.log(e.data);
+    };
     // let q = document.createElement("div")
     // q.id = "point"
     // q.classList.add("rect")
