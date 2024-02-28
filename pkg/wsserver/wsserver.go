@@ -26,6 +26,13 @@ type wsServer struct {
 	files             []fs.DirEntry
 }
 
+func printSyncMapStringString(m *sync.Map) {
+	m.Range(func(key, value any) bool {
+		fmt.Printf("%v: %v\n", key.(*websocket.Conn).RemoteAddr(), value.(string))
+		return true
+	})
+}
+
 func NewWsServer(contentPath string) (*wsServer, error) {
 	up := filepath.Join(contentPath, "/upload")
 	ms := filepath.Join(contentPath, "/msg")
@@ -83,7 +90,8 @@ func (s *wsServer) HandleUploadws(ws *websocket.Conn) {
 	s.connsUpload.Store(ws, int(len(s.files)-1)) //самый свежий файл
 	buf := make([]byte, 1024)
 	fmt.Println(`new incoming "uploadws" connection from client:`, ws.Request().RemoteAddr)
-	fmt.Println("WS list: ", s.conns)
+	// fmt.Println("WS list: ", s.conns)
+	printSyncMapStringString(s.conns)
 
 	// ws.Write([]byte(`/upload/` + s.files[s.connsUpload[ws]].Name()))
 	fnum, _ := s.connsUpload.Load(ws)
@@ -100,7 +108,8 @@ func (s *wsServer) HandleUploadws(ws *websocket.Conn) {
 				fmt.Println("connection closed: ", ws.Request().RemoteAddr)
 				s.conns.Delete(ws)
 				s.connsUpload.Delete(ws)
-				fmt.Println("WS list: ", s.conns)
+				// fmt.Println("WS list: ", s.conns)
+				printSyncMapStringString(s.conns)
 				break
 			}
 			fmt.Println("uploadws read error: ", err)
@@ -138,14 +147,16 @@ func (s *wsServer) HandleWs(ws *websocket.Conn) {
 	s.conns.Store(ws, "ws")
 	buf := make([]byte, 1024)
 	fmt.Println(`New incoming "ws" connection from client:`, ws.Request().RemoteAddr)
-	fmt.Println("WS list: ", s.conns)
+	// fmt.Println("WS list: ", s.conns)
+	printSyncMapStringString(s.conns)
 	for {
 		n, err := ws.Read(buf)
 		if err != nil {
 			if err == io.EOF {
 				fmt.Println("Connection closed: ", ws.Request().RemoteAddr)
 				s.conns.Delete(ws)
-				fmt.Println("WS list: ", s.conns)
+				// fmt.Println("WS list: ", s.conns)
+				printSyncMapStringString(s.conns)
 				break
 			}
 			fmt.Println("Read error: ", err)
@@ -177,14 +188,16 @@ func (s *wsServer) HandleEventws(ws *websocket.Conn) {
 	s.conns.Store(ws, "eventws")
 	buf := make([]byte, 1024)
 	fmt.Println(`New incoming "eventws" connection from client:`, ws.Request().RemoteAddr)
-	fmt.Println("WS list: ", s.conns)
+	// fmt.Println("WS list: ", s.conns)
+	printSyncMapStringString(s.conns)
 	for {
 		n, err := ws.Read(buf)
 		if err != nil {
 			if err == io.EOF {
 				fmt.Println("Connection closed: ", ws.Request().RemoteAddr)
 				s.conns.Delete(ws)
-				fmt.Println("WS list: ", s.conns)
+				// fmt.Println("WS list: ", s.conns)
+				printSyncMapStringString(s.conns)
 				break
 			}
 			fmt.Println("Read error: ", err)
