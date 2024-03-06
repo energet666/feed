@@ -15,6 +15,10 @@ window.onload = () => {
     const socket = new WebSocket("ws://" + ip + "/ws");
     const socketUpload = new WebSocket("ws://" + ip + "/uploadws");
     const socketEvent = new WebSocket("ws://" + ip + "/eventws");
+    socket.onclose = () => { console.log(`WS "ws" Disconnected`); };
+    socket.onerror = () => { console.log(`WS "ws" Error`); };
+    socket.onopen = () => { console.log(`WS "ws" Connected`); };
+    socketUpload.onopen = () => { endContentCheck(); };
     function appendToBody(event) {
         const data = JSON.parse(event.data);
         const d = cardTemplate.content.cloneNode(true);
@@ -145,9 +149,7 @@ window.onload = () => {
             default:
                 break;
         }
-        if (document.documentElement.offsetHeight - window.innerHeight - document.documentElement.scrollTop < window.innerHeight) {
-            socketUpload.send("old");
-        }
+        endContentCheck();
     }
     socketUpload.onmessage = appendToBody;
     socket.addEventListener("message", (e) => {
@@ -160,16 +162,6 @@ window.onload = () => {
             //ring.play()
         }
     });
-    socket.onclose = () => {
-        console.log('Service', "WebSocket Disconnected");
-    };
-    socket.onerror = () => {
-        console.log('Service', "WebSocket Error");
-    };
-    socket.onopen = () => {
-        console.log('Service', "WebSocket Connected");
-        // socket.send('Ураааааа!')
-    };
     const uploadingOverlay = document.querySelector(".over");
     document.addEventListener("dragenter", (e) => {
         e.preventDefault();
@@ -226,18 +218,21 @@ window.onload = () => {
             // document.removeEventListener("scroll", snappingOn)
         }
     };
-    document.addEventListener("scroll", () => {
-        // console.log(`${document.documentElement.scrollTop}/${document.documentElement.offsetHeight - window.innerHeight}`)
+    const endContentCheck = () => {
         if (document.documentElement.offsetHeight - window.innerHeight - document.documentElement.scrollTop < window.innerHeight) {
             socketUpload.send("old");
         }
-    });
-    let liveChecker = setInterval(() => {
-        socketEvent.send("Ты живой?");
-    }, 1000);
-    socketEvent.onmessage = (e) => {
-        console.log(e.data);
     };
+    document.addEventListener("scroll", () => {
+        // console.log(`${document.documentElement.scrollTop}/${document.documentElement.offsetHeight - window.innerHeight}`)
+        endContentCheck();
+    });
+    // let liveChecker = setInterval(()=>{
+    // 	socketEvent.send("Ты живой?")
+    // }, 1000)
+    // socketEvent.onmessage = (e) => {
+    // 	console.log(e.data)
+    // }
     // let q = document.createElement("div")
     // q.id = "point"
     // q.classList.add("rect")
