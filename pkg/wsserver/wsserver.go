@@ -19,20 +19,20 @@ import (
 )
 
 type wsServer struct {
-	conns             *sync.Map
-	connsUpload       *sync.Map
-	contentPath       string
-	contentPathUpload string
-	contentPathMsg    string
-	files             []fs.DirEntry
+	conns             *sync.Map     //[вебсокет]тип вебсокета
+	connsUpload       *sync.Map     //[вебсокет типа "uploadws"]индекс последнего отданного файла из слайса "files"
+	contentPath       string        //директория с контентом и комментариями
+	contentPathUpload string        //директория с контентом, дочерняя для "contentPath"
+	contentPathMsg    string        //директория с комментариями, дочерняя для "contentPath"
+	files             []fs.DirEntry //отсортированный по дате слайс файлов из директории "contentPathUpload". [0] - самый старый
 }
 
 func NewWsServer(contentPath string) (*wsServer, error) {
 	var conns sync.Map
 	var connsUpload sync.Map
+
 	up := filepath.Join(contentPath, "/upload")
 	ms := filepath.Join(contentPath, "/msg")
-
 	err := createDirIfNotExist(up)
 	if err != nil {
 		return nil, err
@@ -66,7 +66,6 @@ type comand struct {
 
 func (s *wsServer) HandleUploadws(ws *websocket.Conn) {
 	s.conns.Store(ws, "uploadws")
-	s.connsUpload.Store(ws, int(len(s.files)-1)) //самый свежий файл(последний в слайсе)
 	buf := make([]byte, 1024)
 	log.Println(`New incoming WS "uploadws" connection from client:`, ws.Request().RemoteAddr)
 	printSyncMapStringString(s.conns)
@@ -88,15 +87,19 @@ func (s *wsServer) HandleUploadws(ws *websocket.Conn) {
 		log.Println("Recived from uploadws: " + string(msg))
 		switch string(msg) {
 		case "old":
-			if n, _ := s.connsUpload.Load(ws); n.(int) != 0 {
-				s.connsUpload.Store(ws, n.(int)-1)
-				nfile, _ := s.connsUpload.Load(ws)
-				comandJSON, _ := json.Marshal(comand{
-					Cmd: `append`,
-					Arg: `/upload/` + s.files[nfile.(int)].Name(),
-				})
-				ws.Write(comandJSON)
+			n, ok := s.connsUpload.Load(ws)
+			if !ok {
+				n = len(s.files)
 			}
+			if n.(int) < 1 {
+				continue
+			}
+			comandJSON, _ := json.Marshal(comand{
+				Cmd: `append`,
+				Arg: `/upload/` + s.files[n.(int)-1].Name(),
+			})
+			ws.Write(comandJSON)
+			s.connsUpload.Store(ws, n.(int)-1)
 			// case "new":
 			// 	if s.connsUpload[ws] != uint64(len(s.files)-1) {
 			// 		s.connsUpload[ws] += 1
@@ -115,7 +118,6 @@ func (s *wsServer) HandleWs(ws *websocket.Conn) {
 	s.conns.Store(ws, "ws")
 	buf := make([]byte, 1024)
 	log.Println(`New incoming WS "ws" connection from client:`, ws.Request().RemoteAddr)
-	// fmt.Println("WS list: ", s.conns)
 	printSyncMapStringString(s.conns)
 	for {
 		n, err := ws.Read(buf)
@@ -123,7 +125,6 @@ func (s *wsServer) HandleWs(ws *websocket.Conn) {
 			if err == io.EOF {
 				log.Println(`WS "ws" connection closed: `, ws.Request().RemoteAddr)
 				s.conns.Delete(ws)
-				// fmt.Println("WS list: ", s.conns)
 				printSyncMapStringString(s.conns)
 				break
 			}
@@ -133,7 +134,10 @@ func (s *wsServer) HandleWs(ws *websocket.Conn) {
 		msg := buf[:n]
 
 		var msgStruct message
-		json.Unmarshal(msg, &msgStruct)
+		err = json.Unmarshal(msg, &msgStruct)
+		if err != nil {
+			log.Println(err)
+		}
 		fo, err := os.OpenFile(
 			filepath.Join(s.contentPathMsg, strings.TrimPrefix(msgStruct.Id, "/upload/")+"._msg"),
 			os.O_APPEND|os.O_WRONLY|os.O_CREATE,
@@ -141,7 +145,7 @@ func (s *wsServer) HandleWs(ws *websocket.Conn) {
 		if err != nil {
 			log.Println(err)
 		}
-		fo.Write([]byte(msgStruct.Txt + "\n"))
+		fo.WriteString(msgStruct.Txt + "\n")
 		fo.Close()
 		s.Broadcast(msg, "ws")
 	}
@@ -190,7 +194,7 @@ func (s *wsServer) HandleUploadxml(w http.ResponseWriter, r *http.Request) {
 
 	out, err := os.Create(filepath.Join(s.contentPathUpload, header.Filename))
 	if err != nil {
-		log.Printf("Unable to create the file for writing. Check your write access privilege")
+		log.Printf("Unable to create the file for writing: %s", err)
 		return
 	}
 	defer out.Close()
@@ -202,7 +206,7 @@ func (s *wsServer) HandleUploadxml(w http.ResponseWriter, r *http.Request) {
 	}
 	outInfo, _ := out.Stat()
 	s.files = append(s.files, fs.FileInfoToDirEntry(outInfo))
-	fmt.Printf("%s %d Bytes saved\n", header.Filename, header.Size)
+	log.Printf("%s %d Bytes saved\n", header.Filename, header.Size)
 	comandJSON, _ := json.Marshal(
 		comand{
 			Cmd: `prepend`,

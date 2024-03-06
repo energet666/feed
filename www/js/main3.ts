@@ -201,27 +201,35 @@ window.onload = () => {
 	})
 	document.addEventListener("drop", (e) => {
 		e.preventDefault()
-		let files = e.dataTransfer!.files
-		for (let index = 0; index < files.length; index++) {
-			const file = files[index]
-			console.log('You selected ' + file.name)
-			console.log('File size: ' + file.size)
-			let formData = new FormData()
-			formData.append("file", file)
-			let xhr = new XMLHttpRequest()
-			xhr.upload.onprogress = (e) => {
-				const ev = e as ProgressEvent
-				const uploadProgress = (ev.loaded/ev.total*100).toFixed(0)
-				console.log("Upload progress: " + uploadProgress + "%")
-				uploadingOverlay.innerText = "Upload progress: " + uploadProgress + "%"
-			}
-			xhr.upload.onloadend = () => {
+		const files = e.dataTransfer!.files
+		
+		if(files.length > 1) {
+			uploadingOverlay.innerText = "One at a time! Try it again."
+			setTimeout(()=>{
 				uploadingOverlay.classList.remove("show")
 				uploadingOverlay.innerText = "Drop it!"
-			}
-			xhr.open('POST', "/uploadxml/" + file.name, true)
-			xhr.send(formData)
+			}, 3000)
+			return
 		}
+
+		const file = files[0]
+		console.log('You selected ' + file.name)
+		console.log('File size: ' + file.size)
+		let formData = new FormData()
+		formData.append("file", file)
+		let xhr = new XMLHttpRequest()
+		xhr.upload.onprogress = (e) => {
+			const ev = e as ProgressEvent
+			const uploadProgress = (ev.loaded/ev.total*100).toFixed(0)
+			console.log("Upload progress: " + uploadProgress + "%")
+			uploadingOverlay.innerText = "Upload progress: " + uploadProgress + "%"
+		}
+		xhr.upload.onloadend = () => {
+			uploadingOverlay.classList.remove("show")
+			uploadingOverlay.innerText = "Drop it!"
+		}
+		xhr.open('POST', "/uploadxml/" + file.name, true)
+		xhr.send(formData)
 	})
 	// function snappingOn() {
 	// 	document.documentElement.classList.add("snappingOn")

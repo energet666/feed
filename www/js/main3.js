@@ -19,6 +19,17 @@ window.onload = () => {
     socket.onerror = () => { console.log(`WS "ws" Error`); };
     socket.onopen = () => { console.log(`WS "ws" Connected`); };
     socketUpload.onopen = () => { endContentCheck(); };
+    socketUpload.onmessage = appendToBody;
+    socket.addEventListener("message", (e) => {
+        const data = JSON.parse(e.data);
+        const target = document.getElementById(data.id);
+        if (target) {
+            const com = target.querySelector(".comments");
+            com.innerText += data.txt + "\n";
+            com.scrollTo(0, com.scrollHeight);
+            //ring.play()
+        }
+    });
     function appendToBody(event) {
         const data = JSON.parse(event.data);
         const d = cardTemplate.content.cloneNode(true);
@@ -132,10 +143,11 @@ window.onload = () => {
                     return;
                 }
                 lastMsg = msginput.value; //на будущее для вывода последних комментариев
-                socket.send(JSON.stringify({
+                const msg = {
                     id: wrapper.id,
                     txt: msginput.value
-                }));
+                };
+                socket.send(JSON.stringify(msg));
                 msginput.value = "";
             }
         };
@@ -151,17 +163,6 @@ window.onload = () => {
         }
         endContentCheck();
     }
-    socketUpload.onmessage = appendToBody;
-    socket.addEventListener("message", (e) => {
-        const data = JSON.parse(e.data);
-        const target = document.getElementById(data.id);
-        if (target) {
-            const com = target.querySelector(".comments");
-            com.innerText += data.txt + "\n";
-            com.scrollTo(0, com.scrollHeight);
-            //ring.play()
-        }
-    });
     const uploadingOverlay = document.querySelector(".over");
     document.addEventListener("dragenter", (e) => {
         e.preventDefault();
@@ -179,27 +180,33 @@ window.onload = () => {
     });
     document.addEventListener("drop", (e) => {
         e.preventDefault();
-        let files = e.dataTransfer.files;
-        for (let index = 0; index < files.length; index++) {
-            const file = files[index];
-            console.log('You selected ' + file.name);
-            console.log('File size: ' + file.size);
-            let formData = new FormData();
-            formData.append("file", file);
-            let xhr = new XMLHttpRequest();
-            xhr.upload.onprogress = (e) => {
-                const ev = e;
-                const uploadProgress = (ev.loaded / ev.total * 100).toFixed(0);
-                console.log("Upload progress: " + uploadProgress + "%");
-                uploadingOverlay.innerText = "Upload progress: " + uploadProgress + "%";
-            };
-            xhr.upload.onloadend = () => {
+        const files = e.dataTransfer.files;
+        if (files.length > 1) {
+            uploadingOverlay.innerText = "One at a time! Try it again.";
+            setTimeout(() => {
                 uploadingOverlay.classList.remove("show");
                 uploadingOverlay.innerText = "Drop it!";
-            };
-            xhr.open('POST', "/uploadxml/" + file.name, true);
-            xhr.send(formData);
+            }, 3000);
+            return;
         }
+        const file = files[0];
+        console.log('You selected ' + file.name);
+        console.log('File size: ' + file.size);
+        let formData = new FormData();
+        formData.append("file", file);
+        let xhr = new XMLHttpRequest();
+        xhr.upload.onprogress = (e) => {
+            const ev = e;
+            const uploadProgress = (ev.loaded / ev.total * 100).toFixed(0);
+            console.log("Upload progress: " + uploadProgress + "%");
+            uploadingOverlay.innerText = "Upload progress: " + uploadProgress + "%";
+        };
+        xhr.upload.onloadend = () => {
+            uploadingOverlay.classList.remove("show");
+            uploadingOverlay.innerText = "Drop it!";
+        };
+        xhr.open('POST', "/uploadxml/" + file.name, true);
+        xhr.send(formData);
     });
     // function snappingOn() {
     // 	document.documentElement.classList.add("snappingOn")
