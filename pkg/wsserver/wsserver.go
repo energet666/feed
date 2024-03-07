@@ -243,13 +243,26 @@ func (s *wsServer) Broadcast(b []byte, t string) {
 	})
 }
 
+type BufferedWriterForTabwriter []byte
+
+func (m *BufferedWriterForTabwriter) Write(p []byte) (int, error) {
+	*m = append(*m, p...)
+	return len(p), nil
+}
+func (m *BufferedWriterForTabwriter) Print() {
+	fmt.Printf("%s", *m)
+	*m = []byte{}
+}
+
 func printSyncMapStringString(m *sync.Map) {
-	w := tabwriter.NewWriter(os.Stdout, 5, 0, 2, ' ', 0)
+	var writer BufferedWriterForTabwriter
+	w := tabwriter.NewWriter(&writer, 5, 0, 2, ' ', 0)
 	m.Range(func(key, value any) bool {
 		fmt.Fprintf(w, "%v\t%v\n", key.(*websocket.Conn).Request().RemoteAddr, value.(string))
 		return true
 	})
 	w.Flush()
+	writer.Print()
 }
 
 func createDirIfNotExist(fname string) error {
