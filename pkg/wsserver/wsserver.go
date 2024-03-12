@@ -88,9 +88,9 @@ func (s *wsServer) HandleUploadws(ws *websocket.Conn) {
 		switch string(msg) {
 		case "old":
 			n, ok := s.connsUpload.Load(ws)
-			nt := n.(int)
-			if !ok {
-				n = len(s.files)
+			nt := len(s.files)
+			if ok {
+				nt = n.(int)
 			}
 			if nt < 1 {
 				continue
@@ -251,7 +251,7 @@ func (m *BufferedWriterForTabwriter) Write(p []byte) (int, error) {
 	return len(p), nil
 }
 func (m *BufferedWriterForTabwriter) Print() {
-	fmt.Printf("%s", *m)
+	fmt.Printf("%s\n", *m)
 	*m = []byte{}
 }
 
