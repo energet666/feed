@@ -88,18 +88,19 @@ func (s *wsServer) HandleUploadws(ws *websocket.Conn) {
 		switch string(msg) {
 		case "old":
 			n, ok := s.connsUpload.Load(ws)
+			nt := n.(int)
 			if !ok {
 				n = len(s.files)
 			}
-			if n.(int) < 1 {
+			if nt < 1 {
 				continue
 			}
 			comandJSON, _ := json.Marshal(comand{
 				Cmd: `append`,
-				Arg: `/upload/` + s.files[n.(int)-1].Name(),
+				Arg: `/upload/` + s.files[nt-1].Name(),
 			})
 			ws.Write(comandJSON)
-			s.connsUpload.Store(ws, n.(int)-1)
+			s.connsUpload.Store(ws, nt-1)
 			// case "new":
 			// 	if s.connsUpload[ws] != uint64(len(s.files)-1) {
 			// 		s.connsUpload[ws] += 1
