@@ -193,7 +193,22 @@ func (s *wsServer) HandleUploadxml(w http.ResponseWriter, r *http.Request) {
 	}
 	defer file.Close()
 
-	out, err := os.Create(filepath.Join(s.contentPathUpload, header.Filename))
+	filename := header.Filename
+	filenamePath := filepath.Join(s.contentPathUpload, filename)
+	n := 0
+	for {
+		_, err := os.Stat(filenamePath)
+		if err != nil {
+			if os.IsNotExist(err) {
+				break
+			}
+		}
+		filename = fmt.Sprintf("%d_%s", n, header.Filename)
+		filenamePath = filepath.Join(s.contentPathUpload, filename)
+		n += 1
+	}
+
+	out, err := os.Create(filenamePath)
 	if err != nil {
 		log.Printf("Unable to create the file for writing: %s", err)
 		return
@@ -207,11 +222,11 @@ func (s *wsServer) HandleUploadxml(w http.ResponseWriter, r *http.Request) {
 	}
 	outInfo, _ := out.Stat()
 	s.files = append(s.files, fs.FileInfoToDirEntry(outInfo))
-	log.Printf("%s %d Bytes saved\n", header.Filename, header.Size)
+	log.Printf("%s %d Bytes saved\n", filename, header.Size)
 	comandJSON, _ := json.Marshal(
 		comand{
 			Cmd: `prepend`,
-			Arg: `/upload/` + header.Filename,
+			Arg: `/upload/` + filename,
 		})
 	s.Broadcast(comandJSON, "uploadws")
 }
