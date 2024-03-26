@@ -46,7 +46,7 @@ func main() {
 	httpServ := &http.Server{
 		Addr:           ":" + port,
 		Handler:        myMux,
-		ReadTimeout:    60 * time.Second, //Если ставить маленький таймаут, то при загрузки больших файлов с фронта соединение успевает закрытся
+		ReadTimeout:    60 * time.Second, //Если ставить маленький таймаут, то при загрузке больших файлов с фронта соединение успевает закрытся
 		WriteTimeout:   60 * time.Second,
 		MaxHeaderBytes: 1 << 20,
 	}
