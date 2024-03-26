@@ -26,8 +26,8 @@ type wsServer struct {
 func NewWsServer(contentPath string) (*wsServer, error) {
 	var conns sync.Map
 
-	up := filepath.Join(contentPath, "/upload")
-	ms := filepath.Join(contentPath, "/msg")
+	up := filepath.Join(contentPath, "upload")
+	ms := filepath.Join(contentPath, "msg")
 	err := createDirIfNotExist(up)
 	if err != nil {
 		return nil, err
@@ -103,19 +103,18 @@ func printSyncMapStringString(m *sync.Map) {
 	writer.Print()
 }
 
-func createDirIfNotExist(fname string) error {
-	_, err := os.Stat(fname)
+func createDirIfNotExist(dirName string) error {
+	_, err := os.Stat(dirName)
 	if err != nil {
 		if os.IsNotExist(err) {
-			log.Printf("Директория %s не найдена", fname)
-			err := os.Mkdir(fname, 0644)
+			err := os.Mkdir(dirName, 0644)
 			if err != nil {
-				return fmt.Errorf("не удалось создать директорию %s: %s", fname, err)
+				return fmt.Errorf("не удалось создать директорию %s: %s", dirName, err)
 			}
-			log.Printf("Директория %s создана", fname)
-		} else {
-			return fmt.Errorf("что-то не так с директорией %s: %s", fname, err)
+			log.Printf("Директория %s создана", dirName)
+			return nil
 		}
+		return fmt.Errorf("что-то не так с директорией %s: %s", dirName, err)
 	}
 	return nil
 }

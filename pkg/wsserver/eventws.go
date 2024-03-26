@@ -10,24 +10,25 @@ import (
 )
 
 func (s *wsServer) HandleEventws(ws *websocket.Conn) {
-	s.conns.Store(ws, "eventws")
+	websocketTag := "eventws"
+	s.conns.Store(ws, websocketTag)
 	buf := make([]byte, 1024)
-	log.Println(`New incoming WS "eventws" connection from client:`, ws.Request().RemoteAddr)
+	log.Printf(`New incoming WS "%s" connection from client: %s\n`, websocketTag, ws.Request().RemoteAddr)
 	printSyncMapStringString(s.conns)
 	for {
 		n, err := ws.Read(buf)
 		if err != nil {
 			if err == io.EOF {
-				log.Println(`WS "eventws" connection closed: `, ws.Request().RemoteAddr)
+				log.Printf(`WS "%s" connection closed: %s\n`, websocketTag, ws.Request().RemoteAddr)
 				s.conns.Delete(ws)
 				printSyncMapStringString(s.conns)
 				break
 			}
-			log.Println(`WS "eventws" read error: `, err)
+			log.Printf(`WS "%s" read error: %s`, websocketTag, err)
 			continue
 		}
 		msg := buf[:n]
-		log.Printf("WS message from %s \"eventws\": %s\n", ws.Request().RemoteAddr, msg)
+		log.Printf(`WS message from %s "%s": %s\n`, ws.Request().RemoteAddr, websocketTag, msg)
 		fmt.Fprintf(ws, "%s %s", time.Now().Format(time.TimeOnly), msg) //echo
 	}
 }

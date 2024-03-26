@@ -7,9 +7,8 @@ import (
 	"net/http"
 	"os"
 	"os/exec"
-	"path"
+	"path/filepath"
 	"runtime"
-	"strings"
 	"sync"
 	"time"
 
@@ -78,22 +77,24 @@ func readParametersFromToml(tomlFileName string, dataStruct *parameters) error {
 	_, err := toml.DecodeFile(tomlFileName, &dataStruct)
 	if err != nil {
 		if os.IsNotExist(err) {
-			log.Printf("не найден файл конфигурации %s\n", tomlFileName)
 			mokupParams := parameters{
 				Port:        12345,
 				ContentPath: "/some/path",
 			}
 			f, err := os.Create(tomlFileName)
 			if err != nil {
-				return fmt.Errorf("не удалось создать файл конфигурации %s: %s", tomlFileName, err)
+				return fmt.Errorf(
+					"не найден файл конфигурации %s, не удалось его создать: %s",
+					tomlFileName, err)
 			}
 			toml.NewEncoder(f).Encode(mokupParams)
-			return fmt.Errorf("файл %s создан, впишите в него необходимые значения параметров и снова запустите пприложение", tomlFileName)
+			return fmt.Errorf(
+				"не найден файл конфигурации %s, файл создан, впишите в него необходимые значения параметров",
+				tomlFileName)
 		}
 		return fmt.Errorf("ошибка декодирования файла конфигурации: %s", err)
 	}
-	dataStruct.ContentPath = strings.ReplaceAll(dataStruct.ContentPath, `\`, `/`)
-	dataStruct.ContentPath = path.Clean(dataStruct.ContentPath)
+	dataStruct.ContentPath = filepath.Clean(dataStruct.ContentPath)
 	_, err = os.Stat(dataStruct.ContentPath)
 	if err != nil {
 		if os.IsNotExist(err) {

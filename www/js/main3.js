@@ -167,10 +167,10 @@ const appendToBody = (event) => {
     const msginput = d.querySelector(".msginput");
     const wrapper = d.querySelector(".wrapper");
     const path = data.Path;
-    // const pathName = path.split("/").pop()!
     const lastSlash = path.lastIndexOf("/");
     const pathDir = path.slice(0, lastSlash + 1);
     const pathName = path.slice(lastSlash + 1);
+    //Экранируем спец символы в названии файла чтобы получить валидный URL ресурса
     const normalizedPath = pathDir + encodeURIComponent(pathName);
     wrapper.id = path;
     //формируем пост в зависимости от типа контента
