@@ -167,14 +167,18 @@ const appendToBody = (event) => {
     const msginput = d.querySelector(".msginput");
     const wrapper = d.querySelector(".wrapper");
     const path = data.Path;
-    const pathName = path.split("/").pop();
+    // const pathName = path.split("/").pop()!
+    const lastSlash = path.lastIndexOf("/");
+    const pathDir = path.slice(0, lastSlash + 1);
+    const pathName = path.slice(lastSlash + 1);
+    const normalizedPath = pathDir + encodeURIComponent(pathName);
     wrapper.id = path;
     //формируем пост в зависимости от типа контента
     switch (tools.getExt(path)) {
         case "mp4":
             const videoDocFragment = document.getElementById("templatevideo").content.cloneNode(true);
             const v = videoDocFragment.querySelector("video");
-            v.setAttribute("src", path);
+            v.setAttribute("src", normalizedPath);
             v.volume = volumeVideo;
             v.onplaying = () => {
                 if (v == currentVideo)
@@ -214,7 +218,7 @@ const appendToBody = (event) => {
             const ha = audioDocFragment.querySelector("a");
             ha.setAttribute("href", path);
             ha.innerText = path.split("/").pop();
-            audioDocFragment.querySelector("source").setAttribute("src", path);
+            audioDocFragment.querySelector("source").setAttribute("src", normalizedPath);
             const a = audioDocFragment.querySelector("audio");
             a.volume = volumeMusic;
             a.onplaying = () => {
@@ -239,20 +243,20 @@ const appendToBody = (event) => {
         case "png":
         case "jpeg":
             const i = document.getElementById("templateimg").content.cloneNode(true);
-            i.querySelector("img").setAttribute("src", path);
+            i.querySelector("img").setAttribute("src", normalizedPath);
             post.append(i);
             break;
         default:
             const o = document.getElementById("templateother").content.cloneNode(true);
             const ho = o.querySelector("a");
-            ho.setAttribute("href", path);
+            ho.setAttribute("href", normalizedPath);
             ho.innerText = pathName;
             post.append(o);
             break;
     }
     //запрашиваем архив комментариев
     let xhr = new XMLHttpRequest();
-    xhr.open('GET', path + "._msg", true);
+    xhr.open('GET', normalizedPath + "._msg", true);
     xhr.setRequestHeader("Cache-Control", "no-store");
     xhr.send();
     xhr.onload = () => {

@@ -9,7 +9,6 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
-	"strings"
 )
 
 func (s *wsServer) HandleUploadxml(w http.ResponseWriter, r *http.Request) {
@@ -22,8 +21,6 @@ func (s *wsServer) HandleUploadxml(w http.ResponseWriter, r *http.Request) {
 	defer file.Close()
 
 	filename := header.Filename
-	//Избавляемся от запрещенных символов
-	filename = strings.ReplaceAll(filename, "#", "_")
 	filenamePath := filepath.Join(s.contentPathUpload, filename)
 	n := 0
 	for {

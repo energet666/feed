@@ -192,7 +192,12 @@ const appendToBody = (event: MessageEvent) => {
 	const msginput = d.querySelector(".msginput") as HTMLInputElement
 	const wrapper = d.querySelector(".wrapper") as HTMLDivElement
 	const path = data.Path
-	const pathName = path.split("/").pop()!
+
+	const lastSlash = path.lastIndexOf("/")
+	const pathDir = path.slice(0, lastSlash+1)
+	const pathName = path.slice(lastSlash+1)
+	//Экранируем спец символы в названии файла чтобы получить валидный URL ресурса
+	const normalizedPath = pathDir + encodeURIComponent(pathName)
 
 	wrapper.id = path
 
@@ -201,7 +206,7 @@ const appendToBody = (event: MessageEvent) => {
 		case "mp4":
 			const videoDocFragment = (document.getElementById("templatevideo") as HTMLTemplateElement).content.cloneNode(true) as DocumentFragment
 			const v = videoDocFragment.querySelector("video")! as HTMLVideoElement
-			v.setAttribute("src", path)
+			v.setAttribute("src", normalizedPath)
 			v.volume = volumeVideo
 			v.onplaying = () => {
 				if(v == currentVideo)
@@ -241,7 +246,7 @@ const appendToBody = (event: MessageEvent) => {
 			const ha = audioDocFragment.querySelector("a")!
 			ha.setAttribute("href", path)
 			ha.innerText = path.split("/").pop()!
-			audioDocFragment.querySelector("source")!.setAttribute("src", path)
+			audioDocFragment.querySelector("source")!.setAttribute("src", normalizedPath)
 			const a = audioDocFragment.querySelector("audio")!
 			a.volume = volumeMusic
 			a.onplaying = () => {
@@ -266,13 +271,13 @@ const appendToBody = (event: MessageEvent) => {
 		case "png":
 		case "jpeg":
 			const i = (document.getElementById("templateimg") as HTMLTemplateElement).content.cloneNode(true) as DocumentFragment
-			i.querySelector("img")!.setAttribute("src", path)
+			i.querySelector("img")!.setAttribute("src", normalizedPath)
 			post.append(i)
 			break
 		default:
 			const o = (document.getElementById("templateother") as HTMLTemplateElement).content.cloneNode(true) as DocumentFragment
 			const ho = o.querySelector("a")!
-			ho.setAttribute("href", path)
+			ho.setAttribute("href", normalizedPath)
 			ho.innerText = pathName
 			post.append(o)
 			break
@@ -280,7 +285,7 @@ const appendToBody = (event: MessageEvent) => {
 
 	//запрашиваем архив комментариев
 	let xhr = new XMLHttpRequest()
-	xhr.open('GET', path + "._msg", true)
+	xhr.open('GET', normalizedPath + "._msg", true)
 	xhr.setRequestHeader("Cache-Control", "no-store")
 	xhr.send()
 	xhr.onload = () => {
