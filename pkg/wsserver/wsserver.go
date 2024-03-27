@@ -54,13 +54,13 @@ func NewWsServer(contentPath string) (*wsServer, error) {
 }
 
 func (s *wsServer) HandleRoot(w http.ResponseWriter, r *http.Request) {
-	log.Println("HandleRoot:", r.RemoteAddr, r.Method, r.URL.Path)
+	log.Printf("%-15s %21s %-10s %s", "HandleRoot", r.RemoteAddr, r.Method, r.URL.Path)
 	w.Header().Set("Cache-Control", "no-store")
 	http.FileServer(http.Dir("www")).ServeHTTP(w, r)
 }
 
 func (s *wsServer) HandleUploadDir(w http.ResponseWriter, r *http.Request) {
-	log.Println("HandleUploadDir:", r.RemoteAddr, r.Method, r.URL.Path)
+	log.Printf("%-15s %21s %-10s %s", "HandleUploadDir", r.RemoteAddr, r.Method, r.URL.Path)
 	r.URL.Path = r.PathValue("path")
 	if strings.ToLower(filepath.Ext(r.URL.Path)) == "._msg" {
 		w.Header().Set("Cache-Control", "no-store")

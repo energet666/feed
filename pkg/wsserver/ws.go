@@ -2,7 +2,6 @@ package wsserver
 
 import (
 	"encoding/json"
-	"fmt"
 	"io"
 	"log"
 	"os"
@@ -20,18 +19,18 @@ func (s *wsServer) HandleWs(ws *websocket.Conn) {
 	websocketTag := "ws"
 	s.conns.Store(ws, websocketTag)
 	buf := make([]byte, 1024)
-	log.Printf(`New incoming WS "%s" connection from client: %s\n`, websocketTag, ws.Request().RemoteAddr)
+	log.Printf("New incoming WS %q connection from client: %s", websocketTag, ws.Request().RemoteAddr)
 	printSyncMapStringString(s.conns)
 	for {
 		n, err := ws.Read(buf)
 		if err != nil {
 			if err == io.EOF {
-				log.Printf(`WS "%s" connection closed: %s\n`, websocketTag, ws.Request().RemoteAddr)
+				log.Printf("WS %q connection closed: %s", websocketTag, ws.Request().RemoteAddr)
 				s.conns.Delete(ws)
 				printSyncMapStringString(s.conns)
 				break
 			}
-			log.Printf(`WS "%s" read error: %s`, websocketTag, err)
+			log.Printf("WS %q read error: %s", websocketTag, err)
 			continue
 		}
 		msg := buf[:n]
@@ -39,13 +38,13 @@ func (s *wsServer) HandleWs(ws *websocket.Conn) {
 		var msgStruct message
 		err = json.Unmarshal(msg, &msgStruct)
 		if err != nil {
-			log.Printf("ошибка декодирования JSON сообщения: %s\n", err)
+			log.Printf("ошибка декодирования JSON сообщения: %s", err)
 			continue
 		}
 
 		filepathRel, err := filepath.Rel("/upload", msgStruct.Id)
 		if err != nil {
-			fmt.Printf("ошибка получения относительного пути: %s\n", err)
+			log.Printf("ошибка получения относительного пути: %s", err)
 			continue
 		}
 		fo, err := os.OpenFile(
@@ -57,7 +56,7 @@ func (s *wsServer) HandleWs(ws *websocket.Conn) {
 			0644,
 		)
 		if err != nil {
-			log.Printf("ошибка открытия/создания файла с комментариями: %s\n", err)
+			log.Printf("ошибка открытия/создания файла с комментариями: %s", err)
 			continue
 		}
 		defer fo.Close()

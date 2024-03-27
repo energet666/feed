@@ -19,26 +19,26 @@ func (s *wsServer) HandleUploadws(ws *websocket.Conn) {
 	websocketTag := "uploadws"
 	s.conns.Store(ws, websocketTag)
 	buf := make([]byte, 1024)
-	log.Printf(`New incoming WS "%s" connection from client: %s\n`, websocketTag, ws.Request().RemoteAddr)
+	log.Printf("New incoming WS %q connection from client: %s", websocketTag, ws.Request().RemoteAddr)
 	printSyncMapStringString(s.conns)
 	for {
 		n, err := ws.Read(buf)
 		if err != nil {
 			if err == io.EOF {
-				log.Printf(`WS "%s" connection closed: %s\n`, websocketTag, ws.Request().RemoteAddr)
+				log.Printf("WS %q connection closed: %s", websocketTag, ws.Request().RemoteAddr)
 				s.conns.Delete(ws)
 				printSyncMapStringString(s.conns)
 				break
 			}
-			log.Printf(`WS "%s" read error: %s`, websocketTag, err)
+			log.Printf("WS %q read error: %s", websocketTag, err)
 			continue
 		}
 		msg := buf[:n]
-		log.Printf(`Recived from %s "%s": %s`, ws.Request().RemoteAddr, websocketTag, msg)
+		log.Printf("%-15s %21s %-10q %s", "Recived from", ws.Request().RemoteAddr, websocketTag, msg)
 
 		npost, err := strconv.Atoi(string(msg))
 		if err != nil {
-			log.Printf("ошибка чтения номера файла из сообщения: %s\n", err)
+			log.Printf("ошибка чтения номера файла из сообщения: %s", err)
 			continue
 		}
 		//отрицательные числа обрабатываем как запрос самого нового файла
