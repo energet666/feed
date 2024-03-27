@@ -310,8 +310,8 @@ const appendToBody = (event: MessageEvent) => {
 		}
 	}
 	if(dir == direction.UP) {
-		contentBlock.prepend(d)//делается в конце функции т.к. после выполнения данной команды содержимое d недоступно
+		contentBlock.prepend(d)
 	} else if(dir == direction.DOWN) {
-		contentBlock.append(d)//делается в конце функции т.к. после выполнения данной команды содержимое d недоступно
+		contentBlock.append(d)
 	}
 }
