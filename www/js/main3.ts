@@ -270,6 +270,7 @@ const appendToBody = (event: MessageEvent) => {
 		case "jpg":
 		case "png":
 		case "jpeg":
+		case "gif":
 			const i = (document.getElementById("templateimg") as HTMLTemplateElement).content.cloneNode(true) as DocumentFragment
 			i.querySelector("img")!.setAttribute("src", normalizedPath)
 			post.append(i)

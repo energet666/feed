@@ -242,6 +242,7 @@ const appendToBody = (event) => {
         case "jpg":
         case "png":
         case "jpeg":
+        case "gif":
             const i = document.getElementById("templateimg").content.cloneNode(true);
             i.querySelector("img").setAttribute("src", normalizedPath);
             post.append(i);
