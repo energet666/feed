@@ -19,13 +19,13 @@ func (s *wsServer) HandleUploadws(ws *websocket.Conn) {
 	websocketTag := "uploadws"
 	s.conns.Store(ws, websocketTag)
 	buf := make([]byte, 1024)
-	log.Printf("New incoming WS %q connection from client: %s", websocketTag, ws.Request().RemoteAddr)
+	log.Printf("%-15s %21s %-10q %s", "New ws", ws.Request().RemoteAddr, websocketTag, "")
 	printSyncMapStringString(s.conns)
 	for {
 		n, err := ws.Read(buf)
 		if err != nil {
 			if err == io.EOF {
-				log.Printf("WS %q connection closed: %s", websocketTag, ws.Request().RemoteAddr)
+				log.Printf("%-15s %21s %-10q %s", "Close ws", ws.Request().RemoteAddr, websocketTag, "")
 				s.conns.Delete(ws)
 				printSyncMapStringString(s.conns)
 				break

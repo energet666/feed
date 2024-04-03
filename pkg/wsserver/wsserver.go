@@ -1,6 +1,7 @@
 package wsserver
 
 import (
+	"bufio"
 	"fmt"
 	"io/fs"
 	"log"
@@ -81,26 +82,30 @@ func (s *wsServer) Broadcast(b []byte, t string) {
 	})
 }
 
-type BufferedWriterForTabwriter []byte
+// type BufferedWriterForTabwriter []byte
 
-func (m *BufferedWriterForTabwriter) Write(p []byte) (int, error) {
-	*m = append(*m, p...)
-	return len(p), nil
-}
-func (m *BufferedWriterForTabwriter) Print() {
-	fmt.Printf("%s\n", *m)
-	*m = []byte{}
-}
+// func (m *BufferedWriterForTabwriter) Write(p []byte) (int, error) {
+// 	*m = append(*m, p...)
+// 	return len(p), nil
+// }
+// func (m *BufferedWriterForTabwriter) Print() {
+// 	fmt.Printf("%s\n", *m)
+// 	*m = []byte{}
+// }
 
 func printSyncMapStringString(m *sync.Map) {
-	var writer BufferedWriterForTabwriter
-	w := tabwriter.NewWriter(&writer, 5, 0, 2, ' ', 0)
+	// var writer BufferedWriterForTabwriter
+	var writer = bufio.NewWriter(os.Stdout)
+	writer.WriteString("┌start ws list\n")
+	w := tabwriter.NewWriter(writer, 5, 0, 2, ' ', 0)
 	m.Range(func(key, value any) bool {
-		fmt.Fprintf(w, "%v\t%v\n", key.(*websocket.Conn).Request().RemoteAddr, value.(string))
+		fmt.Fprintf(w, "├%v\t%q\n", key.(*websocket.Conn).Request().RemoteAddr, value.(string))
 		return true
 	})
 	w.Flush()
-	writer.Print()
+	// writer.Print()
+	writer.WriteString("└end ws list\n")
+	writer.Flush()
 }
 
 func createDirIfNotExist(dirName string) error {
