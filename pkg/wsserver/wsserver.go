@@ -82,17 +82,6 @@ func (s *wsServer) Broadcast(b []byte, t string) {
 	})
 }
 
-// type BufferedWriterForTabwriter []byte
-
-// func (m *BufferedWriterForTabwriter) Write(p []byte) (int, error) {
-// 	*m = append(*m, p...)
-// 	return len(p), nil
-// }
-// func (m *BufferedWriterForTabwriter) Print() {
-// 	fmt.Printf("%s\n", *m)
-// 	*m = []byte{}
-// }
-
 func printSyncMapStringString(m *sync.Map) {
 	// var writer BufferedWriterForTabwriter
 	var writer = bufio.NewWriter(os.Stdout)
@@ -103,7 +92,6 @@ func printSyncMapStringString(m *sync.Map) {
 		return true
 	})
 	w.Flush()
-	// writer.Print()
 	writer.WriteString("└end ws list\n")
 	writer.Flush()
 }
