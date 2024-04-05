@@ -14,6 +14,7 @@ let bottomPost = null;
 let cardTemplate;
 let contentBlock;
 let uploadingOverlay;
+let lastmsgs;
 let socket;
 let socketUpload;
 let socketEvent;
@@ -24,6 +25,7 @@ window.onload = () => {
     cardTemplate = document.getElementById("templatecard");
     contentBlock = document.getElementById('content');
     uploadingOverlay = document.querySelector(".over");
+    lastmsgs = document.getElementById("lastmsgs");
     socket.onclose = () => { console.log(`WS "ws" Disconnected`); };
     socket.onerror = () => { console.log(`WS "ws" Error`); };
     socket.onopen = () => { console.log(`WS "ws" Connected`); };
@@ -56,6 +58,16 @@ window.onload = () => {
             document.addEventListener("scroll", scrollHandler);
         }, 100);
     });
+    let xhr = new XMLHttpRequest();
+    xhr.open('GET', "/upload/lastmsg._msg", true);
+    xhr.setRequestHeader("Cache-Control", "no-store");
+    xhr.send();
+    xhr.onload = () => {
+        if (xhr.status == 200) {
+            lastmsgs.innerText = xhr.response + "<history restored>\n\n";
+            lastmsgs.scrollTo(0, lastmsgs.scrollHeight);
+        }
+    };
     const snapOff = document.getElementById("snap_off");
     snapOff.checked = false;
     snapOff.onchange = () => {
@@ -129,6 +141,8 @@ const endContentCheck = () => {
 const addComment = (e) => {
     const data = JSON.parse(e.data);
     const target = document.getElementById(data.id);
+    lastmsgs.innerText += data.txt + "\n";
+    lastmsgs.scrollTo(0, lastmsgs.scrollHeight);
     if (target) {
         const commentDiv = target.querySelector(".comments");
         commentDiv.innerText += data.txt + "\n";

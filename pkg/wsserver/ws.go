@@ -16,6 +16,7 @@ type message struct {
 }
 
 func (s *wsServer) HandleWs(ws *websocket.Conn) {
+	lastmsgpath := filepath.Join(s.contentPathMsg, "lastmsg._msg")
 	websocketTag := "ws"
 	s.conns.Store(ws, websocketTag)
 	buf := make([]byte, 1024)
@@ -47,6 +48,7 @@ func (s *wsServer) HandleWs(ws *websocket.Conn) {
 			log.Printf("ошибка получения относительного пути: %s", err)
 			continue
 		}
+
 		fo, err := os.OpenFile(
 			filepath.Join(
 				s.contentPathMsg,
@@ -60,6 +62,19 @@ func (s *wsServer) HandleWs(ws *websocket.Conn) {
 			continue
 		}
 		defer fo.Close()
+
+		flastmsgs, err := os.OpenFile(
+			lastmsgpath,
+			os.O_APPEND|os.O_WRONLY|os.O_CREATE,
+			0644,
+		)
+		if err != nil {
+			log.Printf("ошибка открытия файла с последними комментариями: %s", err)
+			continue
+		}
+		defer flastmsgs.Close()
+
+		flastmsgs.WriteString(msgStruct.Txt + "\n")
 		fo.WriteString(msgStruct.Txt + "\n")
 		s.Broadcast(msg, websocketTag)
 	}

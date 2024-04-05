@@ -20,6 +20,7 @@ let bottomPost:number|null = null
 let cardTemplate:HTMLTemplateElement
 let contentBlock:HTMLDivElement
 let uploadingOverlay:HTMLDivElement
+let lastmsgs:HTMLDivElement
 
 let socket:WebSocket
 let socketUpload:WebSocket
@@ -38,6 +39,7 @@ window.onload = () => {
 	cardTemplate = document.getElementById("templatecard") as HTMLTemplateElement
 	contentBlock = document.getElementById('content') as HTMLDivElement
 	uploadingOverlay = document.querySelector(".over") as HTMLDivElement
+	lastmsgs = document.getElementById("lastmsgs") as HTMLDivElement
 
 	socket.onclose   = () => {console.log(`WS "ws" Disconnected`)}
 	socket.onerror   = () => {console.log(`WS "ws" Error`)}
@@ -74,6 +76,17 @@ window.onload = () => {
 			document.addEventListener("scroll", scrollHandler)
 		}, 100)
 	})
+
+	let xhr = new XMLHttpRequest()
+	xhr.open('GET', "/upload/lastmsg._msg", true)
+	xhr.setRequestHeader("Cache-Control", "no-store")
+	xhr.send()
+	xhr.onload = () => {
+		if(xhr.status==200){
+			lastmsgs.innerText = xhr.response + "<history restored>\n\n"
+			lastmsgs.scrollTo(0, lastmsgs.scrollHeight)
+		}
+	}
 
 	const snapOff = document.getElementById("snap_off") as HTMLInputElement
 	snapOff.checked = false
@@ -151,6 +164,8 @@ const endContentCheck = () => {
 const addComment = (e:MessageEvent)=>{
 	const data = JSON.parse(e.data) as msgStruct
 	const target = document.getElementById(data.id)
+	lastmsgs.innerText += data.txt + "\n"
+	lastmsgs.scrollTo(0, lastmsgs.scrollHeight)
 	if(target){
 		const commentDiv = target.querySelector(".comments") as HTMLDivElement
 		commentDiv.innerText += data.txt + "\n"

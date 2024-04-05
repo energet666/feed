@@ -322,3 +322,35 @@ a {
 	66% {transform: rotate(-10deg);}
 	100% {transform: rotate(0deg);}
 }
+
+.lastmsgs {
+	position: fixed;
+	display: block;
+	width: 300px;
+	height: 90%;
+	top: 5%;
+	right: 25px;
+	background-color: rgb(0 0 0 / 35%);
+	border-radius: 10px;
+	color: rgb(185, 185, 185);
+	padding: 5px;
+	overflow-y: scroll;
+	word-wrap: break-word;
+	text-align: left;
+	word-break: normal;
+}
+
+.lastmsgs::-webkit-scrollbar {
+    background-color: #00000000;
+    width: 8px;
+}
+.lastmsgs::-webkit-scrollbar-track {
+    background-color: #00000000;
+}
+.lastmsgs::-webkit-scrollbar-thumb {
+    background-color: #63ccaf;
+    border-radius: 8px;
+}
+.lastmsgs::-webkit-scrollbar-button {
+    display:none;
+}
