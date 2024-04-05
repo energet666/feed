@@ -96,7 +96,7 @@ a {
 	font-weight: 500;
 }
 
-@media (max-width: 768px) {
+/* @media (max-width: 768px) {
 	.maincontainer {
 		width: 98%;
 		min-width: none;
@@ -106,7 +106,7 @@ a {
 	html {
 		background: rgb(224, 4, 4);
 	}
-}
+} */
 
 .post{
 	width: 100%;
@@ -326,7 +326,7 @@ a {
 .lastmsgs {
 	position: fixed;
 	display: block;
-	width: 300px;
+	width: 20%;
 	height: 90%;
 	top: 5%;
 	right: 25px;
@@ -338,6 +338,7 @@ a {
 	word-wrap: break-word;
 	text-align: left;
 	word-break: normal;
+	max-width: 250px;
 }
 
 .lastmsgs::-webkit-scrollbar {
@@ -348,7 +349,7 @@ a {
     background-color: #00000000;
 }
 .lastmsgs::-webkit-scrollbar-thumb {
-    background-color: #63ccaf;
+    background-color: rgb(174, 118, 215);
     border-radius: 8px;
 }
 .lastmsgs::-webkit-scrollbar-button {
