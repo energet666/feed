@@ -10,9 +10,7 @@ let currentVideo:HTMLVideoElement|null = null
 let volumeVideo = defaultVolume
 let muteVideo = false
 
-let currentMusic:HTMLAudioElement|null = null
-let volumeMusic = defaultVolume
-let muteMusic = false
+let player:HTMLAudioElement
 
 //let ring = new Audio("./upload/Iphone - Message Tone.mp3")
 let topPost:number|null = null
@@ -26,11 +24,6 @@ let socket:WebSocket
 let socketUpload:WebSocket
 let socketEvent:WebSocket
 
-type msgStruct = {
-	id: string,
-	txt: string,
-}
-
 window.onload = () => {
 	socket       = new WebSocket("ws://" + ip + "/ws")
 	socketUpload = new WebSocket("ws://" + ip + "/uploadws")
@@ -39,6 +32,8 @@ window.onload = () => {
 	contentBlock = document.getElementById('content') as HTMLDivElement
 	uploadingOverlay = document.querySelector(".over") as HTMLDivElement
 	lastmsgs = document.getElementById("lastmsgs") as HTMLDivElement
+	player = document.querySelector(".rightBar > .music") as HTMLAudioElement
+	player.volume = defaultVolume
 
 	socket.onclose   = () => {console.log(`WS "ws" Disconnected`)}
 	socket.onerror   = () => {console.log(`WS "ws" Error`)}
@@ -160,6 +155,10 @@ const endContentCheck = () => {
 	}
 }
 
+type msgStruct = {
+	id: string,
+	txt: string,
+}
 const addComment = (e:MessageEvent)=>{
 	const data = JSON.parse(e.data) as msgStruct
 	const target = document.getElementById(data.id)
@@ -170,6 +169,20 @@ const addComment = (e:MessageEvent)=>{
 		commentDiv.innerText += data.txt + "\n"
 		commentDiv.scrollTo(0, commentDiv.scrollHeight)
 		//ring.play()
+	}
+}
+const sendMsg = (event:KeyboardEvent) => {
+	if(event.key == 'Enter') {
+		const input = event.target as HTMLInputElement
+		if (input.value.length == 0) {
+			return
+		}
+		const msg:msgStruct = {
+				id:  input.parentElement!.id,//берем id у wrapper
+				txt: input.value,
+			}
+		socket.send(JSON.stringify(msg))
+		input.value = ""
 	}
 }
 
@@ -263,26 +276,14 @@ const appendToBody = (event: MessageEvent) => {
 		case "mp3":
 			const audioDocFragment = (document.getElementById("templateaudio") as HTMLTemplateElement).content.cloneNode(true) as DocumentFragment
 			const ha = audioDocFragment.querySelector("a")!
-			ha.setAttribute("href", path)
+			ha.setAttribute("href", normalizedPath)
 			ha.innerText = path.split("/").pop()!
 			audioDocFragment.querySelector("source")!.setAttribute("src", normalizedPath)
 			const a = audioDocFragment.querySelector("audio")!
-			a.volume = volumeMusic
 			a.onplaying = () => {
-				if(a == currentMusic)
-					return
-				a.volume = volumeMusic
-				a.muted = muteMusic
-				if(currentMusic) {
-					currentMusic.classList.remove("musicfix")
-					currentMusic.pause()
-				}
-				a.classList.add("musicfix")
-				currentMusic = a
-			}
-			a.onvolumechange = () => {
-				volumeMusic = a.volume
-				muteMusic = a.muted
+				a.pause()
+				player.setAttribute("src", normalizedPath)
+				player.play()
 			}
 			post.append(audioDocFragment)
 			break
@@ -321,20 +322,5 @@ const appendToBody = (event: MessageEvent) => {
 		contentBlock.prepend(cardDocFragment)
 	} else if(dir == direction.DOWN) {
 		contentBlock.append(cardDocFragment)
-	}
-}
-
-const sendMsg = (event:KeyboardEvent) => {
-	if(event.key == 'Enter') {
-		const input = event.target as HTMLInputElement
-		if (input.value.length == 0) {
-			return
-		}
-		const msg:msgStruct = {
-				id:  input.parentElement!.id,//берем id у wrapper
-				txt: input.value,
-			}
-		socket.send(JSON.stringify(msg))
-		input.value = ""
 	}
 }

@@ -5,9 +5,7 @@ const defaultVolume = 0.25;
 let currentVideo = null;
 let volumeVideo = defaultVolume;
 let muteVideo = false;
-let currentMusic = null;
-let volumeMusic = defaultVolume;
-let muteMusic = false;
+let player;
 //let ring = new Audio("./upload/Iphone - Message Tone.mp3")
 let topPost = null;
 let bottomPost = null;
@@ -24,6 +22,8 @@ window.onload = () => {
     contentBlock = document.getElementById('content');
     uploadingOverlay = document.querySelector(".over");
     lastmsgs = document.getElementById("lastmsgs");
+    player = document.querySelector(".rightBar > .music");
+    player.volume = defaultVolume;
     socket.onclose = () => { console.log(`WS "ws" Disconnected`); };
     socket.onerror = () => { console.log(`WS "ws" Error`); };
     socket.onopen = () => { console.log(`WS "ws" Connected`); };
@@ -148,6 +148,20 @@ const addComment = (e) => {
         //ring.play()
     }
 };
+const sendMsg = (event) => {
+    if (event.key == 'Enter') {
+        const input = event.target;
+        if (input.value.length == 0) {
+            return;
+        }
+        const msg = {
+            id: input.parentElement.id, //берем id у wrapper
+            txt: input.value,
+        };
+        socket.send(JSON.stringify(msg));
+        input.value = "";
+    }
+};
 const appendToBody = (event) => {
     const data = JSON.parse(event.data);
     let direction;
@@ -233,26 +247,14 @@ const appendToBody = (event) => {
         case "mp3":
             const audioDocFragment = document.getElementById("templateaudio").content.cloneNode(true);
             const ha = audioDocFragment.querySelector("a");
-            ha.setAttribute("href", path);
+            ha.setAttribute("href", normalizedPath);
             ha.innerText = path.split("/").pop();
             audioDocFragment.querySelector("source").setAttribute("src", normalizedPath);
             const a = audioDocFragment.querySelector("audio");
-            a.volume = volumeMusic;
             a.onplaying = () => {
-                if (a == currentMusic)
-                    return;
-                a.volume = volumeMusic;
-                a.muted = muteMusic;
-                if (currentMusic) {
-                    currentMusic.classList.remove("musicfix");
-                    currentMusic.pause();
-                }
-                a.classList.add("musicfix");
-                currentMusic = a;
-            };
-            a.onvolumechange = () => {
-                volumeMusic = a.volume;
-                muteMusic = a.muted;
+                a.pause();
+                player.setAttribute("src", normalizedPath);
+                player.play();
             };
             post.append(audioDocFragment);
             break;
@@ -289,19 +291,5 @@ const appendToBody = (event) => {
     }
     else if (dir == direction.DOWN) {
         contentBlock.append(cardDocFragment);
-    }
-};
-const sendMsg = (event) => {
-    if (event.key == 'Enter') {
-        const input = event.target;
-        if (input.value.length == 0) {
-            return;
-        }
-        const msg = {
-            id: input.parentElement.id, //берем id у wrapper
-            txt: input.value,
-        };
-        socket.send(JSON.stringify(msg));
-        input.value = "";
     }
 };

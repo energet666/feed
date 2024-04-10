@@ -14,8 +14,15 @@
 		<div id="content"> </div>
 	</div>
 	<input type="checkbox" name="snap_off" id="snap_off" class="mycheck">
-	<div class="lastmsgs" id="lastmsgs"></div>
+	<div class="rightBar">
+		<audio controls="" class="music">
+			<source src="/upload/Iphone - Message Tone.mp3" type="audio/mpeg">
+			Your browser does not support the audio element.
+		</audio>
+		<div class="lastmsgs" id="lastmsgs"></div>
+	</div>
 </body>
+
 <template id="templatecard">
 	<div class="card">
 		<div class="post"></div>
@@ -26,7 +33,7 @@
 	</div>
 </template>
 <template id="templatevideo">
-	<video controls src="" playsinline class="video"></video>
+	<video controls loading="lazy" src="" playsinline class="video"></video>
 	<d class="butwrapper">
 		<button class="butspeed">1.0x</button>
 		<button class="butspeed">1.25x</button>
