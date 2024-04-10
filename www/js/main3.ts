@@ -4,20 +4,20 @@ tools.test("hi from module")
 
 const ip = window.location.host
 
+const defaultVolume = 0.25
+
 let currentVideo:HTMLVideoElement|null = null
-let volumeVideo = 0.25
+let volumeVideo = defaultVolume
 let muteVideo = false
 
 let currentMusic:HTMLAudioElement|null = null
-let volumeMusic = 0.25
+let volumeMusic = defaultVolume
 let muteMusic = false
 
-let lastMsg = ""
 //let ring = new Audio("./upload/Iphone - Message Tone.mp3")
 let topPost:number|null = null
 let bottomPost:number|null = null
 
-let cardTemplate:HTMLTemplateElement
 let contentBlock:HTMLDivElement
 let uploadingOverlay:HTMLDivElement
 let lastmsgs:HTMLDivElement
@@ -36,7 +36,6 @@ window.onload = () => {
 	socketUpload = new WebSocket("ws://" + ip + "/uploadws")
 	socketEvent  = new WebSocket("ws://" + ip + "/eventws")
 
-	cardTemplate = document.getElementById("templatecard") as HTMLTemplateElement
 	contentBlock = document.getElementById('content') as HTMLDivElement
 	uploadingOverlay = document.querySelector(".over") as HTMLDivElement
 	lastmsgs = document.getElementById("lastmsgs") as HTMLDivElement
@@ -186,6 +185,10 @@ const appendToBody = (event: MessageEvent) => {
 		DOWN = 0,
 	}
 	let dir = direction.DOWN
+	//по порядковому номеру поста (fileInfo.N) определяем куда его нужно будет добавить: вверх или низ ленты постов
+	//Если пост не является следующим или предыдущим, то игнорируем.
+	//Это возможно при одновременном запросе некольких постов и рассинхронизации ответов. Порядок постов нарушать нельзя,
+	//самое простое решение - просто проигнорировать, данный пост будет перезапрошен по алгоритму
 	if(topPost != null && bottomPost != null) {
 		if(data.N === bottomPost - 1) {
 			dir = direction.DOWN
@@ -201,11 +204,12 @@ const appendToBody = (event: MessageEvent) => {
 		bottomPost = data.N
 	}
 
-	const d = cardTemplate.content.cloneNode(true) as DocumentFragment
-	const post = d.querySelector(".post") as HTMLDivElement
-	const comments = d.querySelector(".comments") as HTMLDivElement
-	const msginput = d.querySelector(".msginput") as HTMLInputElement
-	const wrapper = d.querySelector(".wrapper") as HTMLDivElement
+	const cardTemplate = document.getElementById("templatecard") as HTMLTemplateElement
+	const cardDocFragment = cardTemplate.content.cloneNode(true) as DocumentFragment
+	const post = cardDocFragment.querySelector(".post") as HTMLDivElement
+	const comments = cardDocFragment.querySelector(".comments") as HTMLDivElement
+	const msginput = cardDocFragment.querySelector(".msginput") as HTMLInputElement
+	const wrapper = cardDocFragment.querySelector(".wrapper") as HTMLDivElement
 	const path = data.Path
 
 	const lastSlash = path.lastIndexOf("/")
@@ -299,7 +303,7 @@ const appendToBody = (event: MessageEvent) => {
 			break
 	}
 
-	//запрашиваем архив комментариев
+	//загружаем архив комментариев
 	let xhr = new XMLHttpRequest()
 	xhr.open('GET', normalizedPath + "._msg", true)
 	xhr.setRequestHeader("Cache-Control", "no-store")
@@ -311,23 +315,26 @@ const appendToBody = (event: MessageEvent) => {
 		}
 	}
 
-	msginput.onkeydown = (event) => {
-		if(event.key == 'Enter') {
-			if (msginput.value.length == 0) {
-				return
-			}
-			lastMsg = msginput.value//на будущее для вывода последних комментариев
-			const msg:msgStruct = {
-					id: wrapper.id,
-					txt: msginput.value,
-				}
-			socket.send(JSON.stringify(msg))
-			msginput.value = ""
-		}
-	}
+	msginput.onkeydown = sendMsg
+
 	if(dir == direction.UP) {
-		contentBlock.prepend(d)
+		contentBlock.prepend(cardDocFragment)
 	} else if(dir == direction.DOWN) {
-		contentBlock.append(d)
+		contentBlock.append(cardDocFragment)
+	}
+}
+
+const sendMsg = (event:KeyboardEvent) => {
+	if(event.key == 'Enter') {
+		const input = event.target as HTMLInputElement
+		if (input.value.length == 0) {
+			return
+		}
+		const msg:msgStruct = {
+				id:  input.parentElement!.id,//берем id у wrapper
+				txt: input.value,
+			}
+		socket.send(JSON.stringify(msg))
+		input.value = ""
 	}
 }

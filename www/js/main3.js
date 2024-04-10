@@ -1,17 +1,16 @@
 import tools from './functions.js';
 tools.test("hi from module");
 const ip = window.location.host;
+const defaultVolume = 0.25;
 let currentVideo = null;
-let volumeVideo = 0.25;
+let volumeVideo = defaultVolume;
 let muteVideo = false;
 let currentMusic = null;
-let volumeMusic = 0.25;
+let volumeMusic = defaultVolume;
 let muteMusic = false;
-let lastMsg = "";
 //let ring = new Audio("./upload/Iphone - Message Tone.mp3")
 let topPost = null;
 let bottomPost = null;
-let cardTemplate;
 let contentBlock;
 let uploadingOverlay;
 let lastmsgs;
@@ -22,7 +21,6 @@ window.onload = () => {
     socket = new WebSocket("ws://" + ip + "/ws");
     socketUpload = new WebSocket("ws://" + ip + "/uploadws");
     socketEvent = new WebSocket("ws://" + ip + "/eventws");
-    cardTemplate = document.getElementById("templatecard");
     contentBlock = document.getElementById('content');
     uploadingOverlay = document.querySelector(".over");
     lastmsgs = document.getElementById("lastmsgs");
@@ -158,6 +156,10 @@ const appendToBody = (event) => {
         direction[direction["DOWN"] = 0] = "DOWN";
     })(direction || (direction = {}));
     let dir = direction.DOWN;
+    //по порядковому номеру поста (fileInfo.N) определяем куда его нужно будет добавить: вверх или низ ленты постов
+    //Если пост не является следующим или предыдущим, то игнорируем.
+    //Это возможно при одновременном запросе некольких постов и рассинхронизации ответов. Порядок постов нарушать нельзя,
+    //самое простое решение - просто проигнорировать, данный пост будет перезапрошен по алгоритму
     if (topPost != null && bottomPost != null) {
         if (data.N === bottomPost - 1) {
             dir = direction.DOWN;
@@ -175,11 +177,12 @@ const appendToBody = (event) => {
         topPost = data.N;
         bottomPost = data.N;
     }
-    const d = cardTemplate.content.cloneNode(true);
-    const post = d.querySelector(".post");
-    const comments = d.querySelector(".comments");
-    const msginput = d.querySelector(".msginput");
-    const wrapper = d.querySelector(".wrapper");
+    const cardTemplate = document.getElementById("templatecard");
+    const cardDocFragment = cardTemplate.content.cloneNode(true);
+    const post = cardDocFragment.querySelector(".post");
+    const comments = cardDocFragment.querySelector(".comments");
+    const msginput = cardDocFragment.querySelector(".msginput");
+    const wrapper = cardDocFragment.querySelector(".wrapper");
     const path = data.Path;
     const lastSlash = path.lastIndexOf("/");
     const pathDir = path.slice(0, lastSlash + 1);
@@ -269,7 +272,7 @@ const appendToBody = (event) => {
             post.append(o);
             break;
     }
-    //запрашиваем архив комментариев
+    //загружаем архив комментариев
     let xhr = new XMLHttpRequest();
     xhr.open('GET', normalizedPath + "._msg", true);
     xhr.setRequestHeader("Cache-Control", "no-store");
@@ -280,24 +283,25 @@ const appendToBody = (event) => {
             comments.scrollTo(0, comments.scrollHeight);
         }
     };
-    msginput.onkeydown = (event) => {
-        if (event.key == 'Enter') {
-            if (msginput.value.length == 0) {
-                return;
-            }
-            lastMsg = msginput.value; //на будущее для вывода последних комментариев
-            const msg = {
-                id: wrapper.id,
-                txt: msginput.value,
-            };
-            socket.send(JSON.stringify(msg));
-            msginput.value = "";
-        }
-    };
+    msginput.onkeydown = sendMsg;
     if (dir == direction.UP) {
-        contentBlock.prepend(d);
+        contentBlock.prepend(cardDocFragment);
     }
     else if (dir == direction.DOWN) {
-        contentBlock.append(d);
+        contentBlock.append(cardDocFragment);
+    }
+};
+const sendMsg = (event) => {
+    if (event.key == 'Enter') {
+        const input = event.target;
+        if (input.value.length == 0) {
+            return;
+        }
+        const msg = {
+            id: input.parentElement.id, //берем id у wrapper
+            txt: input.value,
+        };
+        socket.send(JSON.stringify(msg));
+        input.value = "";
     }
 };

@@ -327,8 +327,9 @@ a {
 	position: fixed;
 	display: block;
 	width: 20%;
-	height: 90%;
-	top: 5%;
+	/* height: 90%; */
+	top: 75px;/*место для плеера*/
+	bottom: 75px;
 	right: 25px;
 	background-color: rgb(0 0 0 / 25%);
 	border-radius: 10px;
